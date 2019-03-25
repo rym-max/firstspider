@@ -1,0 +1,168 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+'''
+@File    :   pipelines.py
+@Time    :   2019/03/23 18:59:28
+@Author  :   Hzx 
+@Version :   1.0
+@Contact :   hzxstarcloud@hotmail.com
+@Desc    :   None
+'''
+
+# Define your item pipelines here
+#
+# Don't forget to add your pipeline to the ITEM_PIPELINES setting
+# See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
+
+import pymysql
+import pymssql
+from time import strftime
+from .utils import get_config
+import time
+from config_INFO import (DATA_DB, DATA_HOST, DATA_PORT, DATA_PSWD, DATA_USER,
+    SQL_DB, SQL_HOST, SQL_PSWD, SQL_USER)
+
+
+class UniversalspiderPipeline(object):
+    def process_item(self, item, spider):
+        return item
+
+#原则上一个item对应一个pipeline
+
+class NewsStandPipeline(object):
+    '''
+
+    ITEM        : news
+    DATABASE    : mysql
+    '''
+    def process_item(self, item, spider):
+
+            self.item_count +=1
+            tag = False
+            title = item.get('title','')
+            url = item.get('url','')
+            text = item.get('text','')
+            date_time = item.get('datetime','1970/01/01')
+            source = item.get('source','')
+            website = item.get('website','')
+            category = item.get('category', '')
+            author = item.get('author','')
+            keywords = item.get('keywords', '')
+
+            if self.filter:
+                for ff in self.filter:
+                    if ff in title or ff in text:
+                        tag=True
+                        break
+            else:
+                tag=True  
+
+            if tag:
+                self.related_count +=1
+                sql = "INSERT INTO "+self.table+" (`title`,`date`,`description`,`source`,`creator`,`subject`,`url`,`attach`,`CategoryId`) "+ \
+                    "VALUES (%(title)s,%(date)s,%(description)s,%(source)s,%(creator)s,%(subject)s,%(url)s,%(attach)s,%(CategoryId)s)"
+
+                value_item = {
+                    "title" : title,
+                    "url" : url,
+                    "description" : text,
+                    "date" : date_time,
+                    "source" : source,
+                    "subject" : category,
+                    "creator" : author,
+                    "attach" :"",
+                    "CategoryId":1
+                }
+                try:
+                    self.cur.execute(sql,value_item)
+                    self.cnx.commit()
+                except Exception as e:
+                    print(e)
+
+            if not self.last_time:
+                self.last_time = time.time()
+                self.logger.info("Crawled %d pages (at %d pages/min), scraped %d items (at %d items/min)" %(
+                        int(self.item_count),int(self.item_count-self.last_item),int(self.related_count),int(self.related_count-self.last_related)
+                ))
+                self.last_related = self.related_count
+                self.last_item = self.item_count
+            else:
+                if time.time()-self.last_time > 60.0:
+                    
+                    self.logger.info("Crawled %d pages (at %d pages/min), scraped %d items (at %d items/min)" %(
+                        int(self.item_count),int(self.item_count-self.last_item),int(self.related_count),int(self.related_count-self.last_related)
+                    ))
+                    self.last_related = self.related_count
+                    self.last_item = self.item_count
+                    self.last_time = time.time()
+                    
+    
+    def open_spider(self, spider):
+        config = get_config(spider._name)
+        self.db = config.get("db","spider_tempnews")
+        self.spider_name = config.get("spider_name","default")
+        self.table = config.get("table",'news')
+        self.filter = config.get("filter",[])
+
+        self.cnx = pymysql.connect(host=DATA_HOST,user=DATA_USER,password=DATA_PSWD,db=DATA_DB, charset='utf8mb4')
+        self.cur = self.cnx.cursor()
+        
+        self.logger = spider.logger
+        self.item_count = 0
+        self.last_item = 0
+        self.related_count = 0
+        self.last_related = 0
+        self.last_time = None
+
+
+class NewsSQLServerPipeline(object):
+    '''
+
+    ITEM        : news
+    DATABASE    : SQL SERVER 
+    '''
+
+    def process_item(self, item):
+                
+        title = item.get('title','')
+        url = item.get('url','')
+        text = item.get('text','')
+        date_time = item.get('datetime','1970/01/01')
+        source = item.get('source','')
+        website = item.get('website','')
+        category = item.get('category', '')
+        author = item.get('author','')
+        keywords = item.get('keywords', '')
+
+
+        sql = "INSERT INTO "+self.table+ " (`title`,`date`,`description`,`source`,`creator`,`subject`,`url`,`attach`,`CategoryId`,`dcdescription`) " + \
+            "VALUES (%(title)s,%(date)s,%(description)s,%(source)s,%(creator)s,%(subject)s,%(url)s,%(attach)s,%(CategoryId)s,%(dcdescription)s)"
+
+        value_item = {
+            "title" : title,
+            "url" : url,
+            "description" : text,
+            "date" : date_time,
+            "source" : source,
+            "subject" : category,
+            "creator" : author,
+            "attach" :"",
+            "CategoryId":1,
+            "dcdescription":""
+        }
+
+        self.cur.execute(sql,value_item)
+        self.cnx.commit()
+
+    def open_spider(self, spider):
+        config = get_config(spider._name)
+        self.db = config.get("db","Vip_TongJi")
+        self.spider_name = config.get("spider_name","default")
+        self.table = config.get("table",'temp'+strftime('%Y%m%d%H%M%S')+self.spider_name)#data
+
+        self.cnx = pymssql.connect(host=SQL_HOST,user=SQL_USER,password=SQL_PSWD,database=SQL_DB)
+        self.cur = self.cnx.cursor()
+        
+
+
+
