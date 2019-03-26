@@ -21,7 +21,7 @@ from .utils import get_config
 import time
 from config_INFO import (DATA_DB, DATA_HOST, DATA_PORT, DATA_PSWD, DATA_USER,
     SQL_DB, SQL_HOST, SQL_PSWD, SQL_USER)
-
+from .configs import corewords
 
 class UniversalspiderPipeline(object):
     def process_item(self, item, spider):
@@ -37,64 +37,64 @@ class NewsStandPipeline(object):
     '''
     def process_item(self, item, spider):
 
-            self.item_count +=1
-            tag = False
-            title = item.get('title','')
-            url = item.get('url','')
-            text = item.get('text','')
-            date_time = item.get('datetime','1970/01/01')
-            source = item.get('source','')
-            website = item.get('website','')
-            category = item.get('category', '')
-            author = item.get('author','')
-            keywords = item.get('keywords', '')
+        self.item_count +=1
+        tag = False
+        title = item.get('title','')
+        url = item.get('url','')
+        text = item.get('text','')
+        date_time = item.get('datetime','1970/01/01')
+        source = item.get('source','')
+        website = item.get('website','')
+        category = item.get('category', '')
+        author = item.get('author','')
+        keywords = item.get('keywords', '')
 
-            if self.filter:
-                for ff in self.filter:
-                    if ff in title or ff in text:
-                        tag=True
-                        break
-            else:
-                tag=True  
+        if self.filter:
+            for ff in self.filter:
+                if ff in title or ff in text:
+                    tag=True
+                    break
+        else:
+            tag=True  
 
-            if tag:
-                self.related_count +=1
-                sql = "INSERT INTO "+self.table+" (`title`,`date`,`description`,`source`,`creator`,`subject`,`url`,`attach`,`CategoryId`) "+ \
-                    "VALUES (%(title)s,%(date)s,%(description)s,%(source)s,%(creator)s,%(subject)s,%(url)s,%(attach)s,%(CategoryId)s)"
+        if tag:
+            self.related_count +=1
+            sql = "INSERT INTO "+self.table+" (`title`,`date`,`description`,`source`,`creator`,`subject`,`url`,`attach`,`CategoryId`) "+ \
+                "VALUES (%(title)s,%(date)s,%(description)s,%(source)s,%(creator)s,%(subject)s,%(url)s,%(attach)s,%(CategoryId)s)"
 
-                value_item = {
-                    "title" : title,
-                    "url" : url,
-                    "description" : text,
-                    "date" : date_time,
-                    "source" : source,
-                    "subject" : category,
-                    "creator" : author,
-                    "attach" :"",
-                    "CategoryId":1
-                }
-                try:
-                    self.cur.execute(sql,value_item)
-                    self.cnx.commit()
-                except Exception as e:
-                    print(e)
+            value_item = {
+                "title" : title,
+                "url" : url,
+                "description" : text,
+                "date" : date_time,
+                "source" : source,
+                "subject" : category,
+                "creator" : author,
+                "attach" :"",
+                "CategoryId":1
+            }
+            try:
+                self.cur.execute(sql,value_item)
+                self.cnx.commit()
+            except Exception as e:
+                print(e)
 
-            if not self.last_time:
-                self.last_time = time.time()
+        if not self.last_time:
+            self.last_time = time.time()
+            self.logger.info("Crawled %d pages (at %d pages/min), scraped %d items (at %d items/min)" %(
+                    int(self.item_count),int(self.item_count-self.last_item),int(self.related_count),int(self.related_count-self.last_related)
+            ))
+            self.last_related = self.related_count
+            self.last_item = self.item_count
+        else:
+            if time.time()-self.last_time > 60.0:
+                
                 self.logger.info("Crawled %d pages (at %d pages/min), scraped %d items (at %d items/min)" %(
-                        int(self.item_count),int(self.item_count-self.last_item),int(self.related_count),int(self.related_count-self.last_related)
+                    int(self.item_count),int(self.item_count-self.last_item),int(self.related_count),int(self.related_count-self.last_related)
                 ))
                 self.last_related = self.related_count
                 self.last_item = self.item_count
-            else:
-                if time.time()-self.last_time > 60.0:
-                    
-                    self.logger.info("Crawled %d pages (at %d pages/min), scraped %d items (at %d items/min)" %(
-                        int(self.item_count),int(self.item_count-self.last_item),int(self.related_count),int(self.related_count-self.last_related)
-                    ))
-                    self.last_related = self.related_count
-                    self.last_item = self.item_count
-                    self.last_time = time.time()
+                self.last_time = time.time()
                     
     
     def open_spider(self, spider):
@@ -102,7 +102,13 @@ class NewsStandPipeline(object):
         self.db = config.get("db","spider_tempnews")
         self.spider_name = config.get("spider_name","default")
         self.table = config.get("table",'news')
-        self.filter = config.get("filter",[])
+        
+        #根据语言决定关键词
+        language = config.get("language",None)
+        if language:
+            self.filter = corewords.corewords[language]
+        else:
+            self.filter = []
 
         self.cnx = pymysql.connect(host=DATA_HOST,user=DATA_USER,password=DATA_PSWD,db=DATA_DB, charset='utf8mb4')
         self.cur = self.cnx.cursor()
@@ -129,30 +135,59 @@ class NewsSQLServerPipeline(object):
         text = item.get('text','')
         date_time = item.get('datetime','1970/01/01')
         source = item.get('source','')
-        website = item.get('website','')
+        #website = item.get('website','')
         category = item.get('category', '')
         author = item.get('author','')
-        keywords = item.get('keywords', '')
+        #keywords = item.get('keywords', '')
 
+        if self.filter:
+            for ff in self.filter:
+                if ff in title or ff in text:
+                    tag=True
+                    break
+        else:
+            tag=True  
 
-        sql = "INSERT INTO "+self.table+ " (`title`,`date`,`description`,`source`,`creator`,`subject`,`url`,`attach`,`CategoryId`,`dcdescription`) " + \
-            "VALUES (%(title)s,%(date)s,%(description)s,%(source)s,%(creator)s,%(subject)s,%(url)s,%(attach)s,%(CategoryId)s,%(dcdescription)s)"
+        if tag:
+            sql = "INSERT INTO "+self.table+ " (`title`,`date`,`description`,`source`,`creator`,`subject`,`url`,`attach`,`CategoryId`,`dcdescription`) " + \
+                "VALUES (%(title)s,%(date)s,%(description)s,%(source)s,%(creator)s,%(subject)s,%(url)s,%(attach)s,%(CategoryId)s,%(dcdescription)s)"
 
-        value_item = {
-            "title" : title,
-            "url" : url,
-            "description" : text,
-            "date" : date_time,
-            "source" : source,
-            "subject" : category,
-            "creator" : author,
-            "attach" :"",
-            "CategoryId":1,
-            "dcdescription":""
-        }
+            value_item = {
+                "title" : title,
+                "url" : url,
+                "description" : text,
+                "date" : date_time,
+                "source" : source,
+                "subject" : category,
+                "creator" : author,
+                "attach" :"",
+                "CategoryId":1,
+                "dcdescription":""
+            }
+            try:
+                self.cur.execute(sql,value_item)
+                self.cnx.commit()
+                self.related_count +=1
+            except Exception as e:
+                print(e)
 
-        self.cur.execute(sql,value_item)
-        self.cnx.commit()
+        if not self.last_time:
+            self.last_time = time.time()
+            self.logger.info("Crawled %d pages (at %d pages/min), scraped %d items (at %d items/min)" %(
+                    int(self.item_count),int(self.item_count-self.last_item),int(self.related_count),int(self.related_count-self.last_related)
+            ))
+            self.last_related = self.related_count
+            self.last_item = self.item_count
+        else:
+            if time.time()-self.last_time > 60.0:
+                
+                self.logger.info("Crawled %d pages (at %d pages/min), scraped %d items (at %d items/min)" %(
+                    int(self.item_count),int(self.item_count-self.last_item),int(self.related_count),int(self.related_count-self.last_related)
+                ))
+                self.last_related = self.related_count
+                self.last_item = self.item_count
+                self.last_time = time.time()    
+
 
     def open_spider(self, spider):
         config = get_config(spider._name)
@@ -160,9 +195,22 @@ class NewsSQLServerPipeline(object):
         self.spider_name = config.get("spider_name","default")
         self.table = config.get("table",'temp'+strftime('%Y%m%d%H%M%S')+self.spider_name)#data
 
+        #根据语言决定关键词
+        language = config.get("language",None)
+        if language:
+            self.filter = corewords.corewords[language]
+        else:
+            self.filter = []
+
         self.cnx = pymssql.connect(host=SQL_HOST,user=SQL_USER,password=SQL_PSWD,database=SQL_DB)
         self.cur = self.cnx.cursor()
         
+        self.logger = spider.logger
+        self.item_count = 0
+        self.last_item = 0
+        self.related_count = 0
+        self.last_related = 0
+        self.last_time = None
 
 
 

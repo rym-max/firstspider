@@ -62,6 +62,35 @@ rules = {
         Rule(LinkExtractor(allow=r'nbs\.D110000gmrb_\d+\.htm', restrict_xpaths='//a[@id="pageLink" and not(contains(text(),"广告"))]')),
     ),
 
+    'fmprc':(
+        Rule(LinkExtractor(allow=r'/t\d+\.shtml', restrict_xpaths='//div[@class="rebox_news"]'), callback='parse_item'),
+    ),
+
+    'most':(
+        Rule(LinkExtractor(allow=r'/c.*?_\d+\.htm', restrict_xpaths='//td[@class="STYLE30"]'),callback='parse_item'),
+    ),
+
+    'miit':(
+        Rule(LinkExtractor(allow=r'content\.html',restrict_xpaths='//div[@class="clist_con"]'),callback='parse_item'),
+    ),
+
+    'moe':(
+        Rule(LinkExtractor(allow=r'\.html', restrict_xpaths='//div[@id="wcmpagehtml"]//a'),callback='parse_item'),
+    ),
+
+    'gmw':(
+        Rule(LinkExtractor(allow=r'content_\d+\.htm',restrict_xpaths="//ul[@class='channel-newsGroup']"), callback='parse_item'),
+    ),
+    
+    'tagess':(
+        Rule(LinkExtractor(allow=r'\.html',restrict_xpaths='//div[@class="box modHeadline"]'), callback='parse_item'),
+    ),
+
+    'swp':(
+        Rule(LinkExtractor(allow=r'/\d+?/.*/',restrict_xpaths='//div[@class="results_container"]'),callback='parse_item'),
+        Rule(LinkExtractor(allow=r'page/\d+/', restrict_xpaths='//div[@class="browseLinksWrap"]//a[contains(text(),"Weiter")]')),
+    ),
+
     #2019两会环球网
     # 'huanqiu':(
     #     Rule(LinkExtractor(allow=r'/\d+-\d+/\d+\.html\?agt=\d', restrict_xpaths='//div[@class="fallsFlow"]//li[@class="item"]'), callback='parse_item', follow=True),
