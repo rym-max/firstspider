@@ -88,3 +88,35 @@ def fromjson(url, pattern, code1, re_mode, group_num, formatter, code2, need_uni
 
 def getdate():
     return [datetime.now().strftime("%Y-%m-%d")]
+
+
+def URLSZERO(dt,logger,**kwargs):
+
+
+def get_start_urls(dt,case,logger,**kwargs):
+    '''for start_urls
+
+
+    '''
+        if case == 0:
+            #static
+            try:
+                return URLSZERO(dt,logger,kwargs)
+            except Exception as e:
+                logger.warn(e)
+
+        elif case == 1:
+            #loop for number
+
+        elif case == 2:
+            #need date
+        
+        elif case == 3:
+            #from josn
+
+
+        else:
+
+            return []
+        
+        return []

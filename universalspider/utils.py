@@ -50,7 +50,7 @@ def get_configs(name):
         password=CONFIG_PSWD, db=CONFIG_DB, charset="utf8mb4")
     cur = cnx.cursor()
 
-    sql_string = r"SELECT config_string FROM config_table WHERE config_name=%(name)s"
+    sql_string = r"SELECT configs FROM " + CONFIG_TABLE + " WHERE name=%(name)s"
     item = {
         "name":name
     }
@@ -84,7 +84,7 @@ def get_rules(name):
         password=CONFIG_PSWD, db=CONFIG_DB, charset="utf8mb4")
     cur = cnx.cursor()
 
-    sql_string = r"SELECT rule_string FROM config_table WHERE config_name=%(name)s"
+    sql_string = r"SELECT rules FROM " + CONFIG_TABLE + " WHERE name=%(name)s"
     item = {
         "name":name
     }
