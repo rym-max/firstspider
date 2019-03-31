@@ -91,32 +91,71 @@ def getdate():
 
 
 def URLSZERO(dt,logger,**kwargs):
+    '''static url
+        dt      :date
+        spider  :logger
+        kwargs  :value
+    '''
+    
 
+def URLSONE(dt,logger,**kwargs):
+    '''static url
+        dt      :date
+        spider  :logger
+        kwargs  :value
+    '''
+    pass
+
+def URLSTWO(dt,logger,**kwargs):
+    '''static url
+        dt      :date
+        spider  :logger
+        kwargs  :value
+    '''
+    pass
+
+def URLSTHREE(dt,logger,**kwargs):
+    '''static url
+        dt      :date
+        spider  :logger
+        kwargs  :value
+    '''
+    pass 
 
 def get_start_urls(dt,case,logger,**kwargs):
     '''for start_urls
 
 
     '''
-        if case == 0:
-            #static
-            try:
-                return URLSZERO(dt,logger,kwargs)
-            except Exception as e:
-                logger.warn(e)
+    if case == 0:
+        #static
+        try:
+            return URLSZERO(dt,logger,**kwargs)
+        except Exception as e:
+            logger.warn(e)
 
-        elif case == 1:
-            #loop for number
+    elif case == 1:
+        #loop for number
+        try:
+            return URLSONE(dt,logger,**kwargs)
+        except Exception as e:
+            logger.warn(e)
 
-        elif case == 2:
-            #need date
-        
-        elif case == 3:
-            #from josn
+    elif case == 2:
+        #need date
+        try:
+            return URLSTWO(dt,logger,**kwargs)
+        except Exception as e:
+            logger.warn(e)
+    elif case == 3:
+        #from josn
+        try:
+            return URLSTHREE(dt,logger,**kwargs)
+        except Exception as e:
+            logger.warn(e)
 
-
-        else:
-
-            return []
+    else:
         
         return []
+    
+    return []

@@ -13,7 +13,7 @@ from os.path import realpath, dirname
 import json
 from csv import reader
 from collections import defaultdict
-from .configs.configs import configs
+#from .configs.configs import configs
 import pymysql
 import pymssql
 from scrapy.spiders import Rule
@@ -108,6 +108,25 @@ def get_rules(name):
         return rrs
     else:
         return () 
+
+def get_dates(name):
+    '''get lastdate from mysql database
+
+    '''
+    cnx = pymysql.connect(host=CONFIG_HOST, user=CONFIG_USER,
+        password=CONFIG_PSWD, db=CONFIG_DB, charset="utf8mb4")
+    cur = cnx.cursor()
+
+    sql_string = r"SELECT datetime FROM " + CONFIG_TABLE + " WHERE name=%(name)s"
+    item = {
+        "name":name
+    }
+    result = cur.execute(sql_string,item)
+    if result:
+        date_string = cur.fetchone()[0]
+        return date_string
+    else:
+        return "null"
 
 
 def get_keyword(file):
