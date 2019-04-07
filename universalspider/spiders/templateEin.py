@@ -34,6 +34,7 @@ class TemplateeinSpider(CrawlSpider):
     def __init__(self, *args, **kwargs):
         """initialize all params from configs/xxx.json file
 
+
         other details see scrapy
         """
 

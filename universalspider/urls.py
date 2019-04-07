@@ -278,7 +278,7 @@ def URLSFOUR(dt,timezone,logger,**kwargs):
     current_date = get_date_withzone(datetime.datetime.now(),timezone)
     
     results = []
-    for li in kwargs.get("api_li",[])
+    for li in kwargs.get("api_li",[]):
         api_url = format_date(current_date,li.get("api_formatter",""))
         if api_url:
             status_code, res = make_request(api_url,logger,"json",None,60,

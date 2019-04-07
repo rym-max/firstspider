@@ -18,7 +18,6 @@ from os.path import dirname, realpath
 
 #from .configs.configs import configs
 import pymysql
-import requests
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 
@@ -26,6 +25,9 @@ import pymssql
 from config_INFO import (CONFIG_DB, CONFIG_HOST, CONFIG_PORT, CONFIG_PSWD,
                          CONFIG_TABLE, CONFIG_USER)
 
+import logging
+
+default_logger = logging.getLogger('UTILS_DEFAULT_LOGGER')
 
 def get_date_withzone(tt,timezone=8):
     now_time_zone = 8
@@ -53,28 +55,41 @@ def get_config(name):
     else:
         return {}
 
-def get_configs(name):
+def get_configs(name,logger=default_logger):
     '''get config from mysql database
 
     annoying to always change configs.py 
     '''
-    cnx = pymysql.connect(host=CONFIG_HOST, user=CONFIG_USER,
-        password=CONFIG_PSWD, db=CONFIG_DB, charset="utf8mb4")
-    cur = cnx.cursor()
+    #pymysql!!!
+    try:
+        cnx = pymysql.connect(host=CONFIG_HOST, user=CONFIG_USER,
+            password=CONFIG_PSWD, db=CONFIG_DB, charset="utf8mb4")
+        cur = cnx.cursor()
+    except Exception as e:
+        logger.error("<<<<[connection error]:%s" % str(e))
+        return {}
 
     sql_string = r"SELECT configs FROM " + CONFIG_TABLE + " WHERE name=%(name)s"
     item = {
         "name":name
     }
-    result = cur.execute(sql_string,item)
-    if result:
-        config_string = cur.fetchone()[0]
-        config = json.loads(config_string)
-        return config
-    else:
-        return {}
 
-def get_rules(name):
+    try:
+        result = cur.execute(sql_string,item)
+    except Exception as e:
+        logger.warn("<<<<[query error]:%s" % str(e))
+        return {}
+    else:
+        if result:
+            config_string = cur.fetchone()[0]
+            config = json.loads(config_string)
+            cnx.close()
+            return config
+        else:
+            cnx.close()
+            return {}
+
+def get_rules(name,logger=default_logger):
     '''get rules from mysql database
 
         rule={
@@ -92,54 +107,134 @@ def get_rules(name):
             ]
         }
     '''
-    cnx = pymysql.connect(host=CONFIG_HOST, user=CONFIG_USER,
-        password=CONFIG_PSWD, db=CONFIG_DB, charset="utf8mb4")
-    cur = cnx.cursor()
+    #pymysql!!!
+    try:
+        cnx = pymysql.connect(host=CONFIG_HOST, user=CONFIG_USER,
+            password=CONFIG_PSWD, db=CONFIG_DB, charset="utf8mb4")
+        cur = cnx.cursor()
+    except Exception as e:
+        logger.error("<<<<[connection error]:%s" % str(e))
+        return {}
 
     sql_string = r"SELECT rules FROM " + CONFIG_TABLE + " WHERE name=%(name)s"
     item = {
         "name":name
     }
-    result = cur.execute(sql_string,item)
-    if result:
-        rule_string = cur.fetchone()[0]
-        rules = json.loads(rule_string)
-        rrs = []
-        for r in rules.get("item",()):
-            l = r["linkextra"]
-            allow = l["allow"] if l["allow"] else ()
-            deny = l["deny"] if l["deny"] else ()
-            res_xp = l["restrict_xpath"] if l["restrict_xpath"] else ()
-            res_cs = l["restrict_css"] if l["restrict_css"] else ()
-            follow = r["follow"] if r["follow"] else None
-            callback = r["callback"] if r["callback"] else None
-            newR = Rule(LinkExtractor(allow=allow, deny=deny, 
-                restrict_xpaths=res_xp, restrict_css=res_cs), 
-                callback=callback, follow=follow)
-            rrs.append(newR)
-        return rrs
-    else:
-        return () 
 
-def get_dates(name):
+    try:
+        result = cur.execute(sql_string,item)
+    except Exception as e:
+        logger.warn("<<<<[query error]:%s" % str(e))
+        return {}
+    else:
+        if result:
+            rule_string = cur.fetchone()[0]
+            rules = json.loads(rule_string)
+            rrs = []
+            for r in rules.get("item",()):
+                l = r["linkextra"]
+                allow = l["allow"] if l["allow"] else ()
+                deny = l["deny"] if l["deny"] else ()
+                res_xp = l["restrict_xpath"] if l["restrict_xpath"] else ()
+                res_cs = l["restrict_css"] if l["restrict_css"] else ()
+                follow = r["follow"] if r["follow"] else None
+                callback = r["callback"] if r["callback"] else None
+                newR = Rule(LinkExtractor(allow=allow, deny=deny, 
+                    restrict_xpaths=res_xp, restrict_css=res_cs), 
+                    callback=callback, follow=follow)
+                rrs.append(newR)
+            cnx.close()
+            return rrs
+        else:
+            cnx.close()
+            return () 
+
+def get_dates(name,logger=default_logger):
     '''get lastdate from mysql database
 
     '''
-    cnx = pymysql.connect(host=CONFIG_HOST, user=CONFIG_USER,
-        password=CONFIG_PSWD, db=CONFIG_DB, charset="utf8mb4")
-    cur = cnx.cursor()
-
+    #pymysql!!!
+    try:
+        cnx = pymysql.connect(host=CONFIG_HOST, user=CONFIG_USER,
+            password=CONFIG_PSWD, db=CONFIG_DB, charset="utf8mb4")
+        cur = cnx.cursor()
+    except Exception as e:
+        logger.error("<<<<[connection error]:%s" % str(e))
+        return {}
+    
     sql_string = r"SELECT datetime FROM " + CONFIG_TABLE + " WHERE name=%(name)s"
     item = {
         "name":name
     }
-    result = cur.execute(sql_string,item)
-    if result:
-        date_string = cur.fetchone()[0]
-        return date_string
-    else:
-        return "null"
 
+    try:
+        result = cur.execute(sql_string,item)
+    except Exception as e:
+        logger.warn("<<<<[query error]:%s" % str(e))
+        return None
+    else:
+        if result:
+            date_string = cur.fetchone()[0]
+            cnx.close()
+            return date_string
+        else:
+            cnx.close()
+            return None
+
+def set_dates(name,logger=default_logger):
+    '''set current date in database
+
+    '''
+    #pymysql!!!
+    try:
+        cnx = pymysql.connect(host=CONFIG_HOST, user=CONFIG_USER,
+            password=CONFIG_PSWD, db=CONFIG_DB, charset="utf8mb4")
+        cur = cnx.cursor()
+    except Exception as e:
+        logger.error("<<<<[connection error]:%s" % str(e))
+        return None
+    #sql server
+
+    #mysql
+    sql_string = r"UPDATE " + CONFIG_TABLE + r" SET datetime=%(date)s WHERE name=%(name)s"
+    
+    #name & date
+    current_date = datetime.datetime.now()
+
+    item = {
+        "name":name,
+        "date":current_date.strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+    try:
+        cur.execute(sql_string,item)
+        cnx.commit()
+    except Exception as e:
+        logger.warn("<<<<[change error]:%s" % str(e))
+        return None
+    else:
+        cnx.close()
+        return current_date
+
+def judge_date(news_date,news_date_formatter=["%Y-%m-%d %H:%M:%S"],last_date=None,timezone=8,logger=default_logger):
+    '''judge date of the news is after last_date
+    
+    '''
+    dd = None
+    for ff in news_date_formatter:
+        try: 
+            dd = datetime.datetime.strptime(news_date,ff)
+        except Exception:
+            pass
+        else:
+            break
+    if not dd:
+        if dd>last_date:
+            return dd,True
+        else:
+            return dd,False
+    logger.warn("<<<<[warn]:error in date decode ")
+    return None,False
 
 def get_keyword(file):
     '''read file as keywords
@@ -170,11 +265,17 @@ def get_keyword(file):
 
     return target_name,keywordlist
 
+#make request
+import requests
 
 session = requests.Session()
 session.headers = {
-
+    'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Encoding':'gzip,deflate,br',
+    'Accept-Language':'zh-CN,zh;q=0.8',
+    'User-Agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0"
 }
+
 def make_request(url, logger, rtype="html", data=None, timeout=60, **kwargs):
 
     try:
