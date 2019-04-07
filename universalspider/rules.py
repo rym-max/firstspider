@@ -91,6 +91,18 @@ rules = {
         Rule(LinkExtractor(allow=r'page/\d+/', restrict_xpaths='//div[@class="browseLinksWrap"]//a[contains(text(),"Weiter")]')),
     ),
 
+    'sueddeun':(
+        Rule(LinkExtractor(allow=r'de/.*?/.*?/.*',restrict_xpaths='//div[@class="entrylist__content"]//a'),callback='parse_item'),
+    ),
+
+    'spiegel':(
+        Rule(LinkExtractor(allow=r'\.html',restrict_xpaths='//div[@class="teaser"]//a'),callback='parse_item'),
+    ),
+
+    'faz':(
+        Rule(LinkExtractor(allow=r'-\d+\.html',restrict_xpaths='//article//a'),callback='parse_item'),
+    ),
+
     #2019两会环球网
     # 'huanqiu':(
     #     Rule(LinkExtractor(allow=r'/\d+-\d+/\d+\.html\?agt=\d', restrict_xpaths='//div[@class="fallsFlow"]//li[@class="item"]'), callback='parse_item', follow=True),

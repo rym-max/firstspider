@@ -9,17 +9,29 @@
 @Desc    :   
 '''
 
-from os.path import realpath, dirname
+import datetime
 import json
-from csv import reader
+import re
 from collections import defaultdict
+from csv import reader
+from os.path import dirname, realpath
+
 #from .configs.configs import configs
 import pymysql
-import pymssql
-from scrapy.spiders import Rule
+import requests
 from scrapy.linkextractors import LinkExtractor
-from config_INFO import (CONFIG_HOST, CONFIG_DB, CONFIG_PORT, CONFIG_PSWD, 
-    CONFIG_TABLE, CONFIG_USER)
+from scrapy.spiders import Rule
+
+import pymssql
+from config_INFO import (CONFIG_DB, CONFIG_HOST, CONFIG_PORT, CONFIG_PSWD,
+                         CONFIG_TABLE, CONFIG_USER)
+
+
+def get_date_withzone(tt,timezone=8):
+    now_time_zone = 8
+    seconds_difference = (timezone - now_time_zone) * 3600
+    return tt - datetime.timedelta(0, seconds_difference, 0)
+
 
 # def get_config(name):
 #     '''get configs from .py file
@@ -157,3 +169,44 @@ def get_keyword(file):
             line_num += 1
 
     return target_name,keywordlist
+
+
+session = requests.Session()
+session.headers = {
+
+}
+def make_request(url, logger, rtype="html", data=None, timeout=60, **kwargs):
+
+    try:
+        if data:
+            r = session.post(url, data=data, timeout=timeout)
+        else:
+            r = session.get(url, timeout=timeout)
+        r.encoding = 'utf8'
+    except Exception as err:
+        logger.warn("<<<<<[%s] request error, [message]: \n\r<<<<<<%s" % (url, str(err)))
+        return -1, {}
+    else:
+        if rtype == "json":
+            try:
+                r_json = r.json()
+            except json.JSONDecodeError as e: 
+                logger.debug("<<<<<<[%s] :\n\r <<<<<<decode error:cannot decode json directly \n\r <<<<<<%s" % (url, str(e)))
+            else:
+                if kwargs.get("json_pattern",""):
+                    pattern = kwargs.get("json_pattern","")
+                    json_str = re.search(pattern,r.content,re.DOTALL)
+                    r_json = json.loads(json_str)
+                else:
+                    r_json = {}
+            return r.status_code, r_json
+        elif rtype == "xml":
+            return r.status_code, r.text
+        elif rtype == "html":
+            return r.status_code, r.text
+        else:
+            return r.status_code, r.text
+
+
+def json_dumps(obj):
+    return json.dumps(obj, ensure_ascii=False, indent=4, sort_keys=True)
