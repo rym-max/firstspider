@@ -276,14 +276,14 @@ session.headers = {
     'User-Agent':"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0"
 }
 
-def make_request(url, logger, rtype="html", data=None, timeout=60, **kwargs):
+def make_request(url, logger, rtype="html", data=None, timeout=60, encode="utf8",**kwargs):
 
     try:
         if data:
             r = session.post(url, data=data, timeout=timeout)
         else:
             r = session.get(url, timeout=timeout)
-        r.encoding = 'utf8'
+        r.encoding = encode
     except Exception as err:
         logger.warn("<<<<<[%s] request error, [message]: \n\r<<<<<<%s" % (url, str(err)))
         return -1, {}
@@ -296,7 +296,7 @@ def make_request(url, logger, rtype="html", data=None, timeout=60, **kwargs):
             else:
                 if kwargs.get("json_pattern",""):
                     pattern = kwargs.get("json_pattern","")
-                    json_str = re.search(pattern,r.content,re.DOTALL)
+                    json_str = re.search(pattern,r.text,re.DOTALL)
                     r_json = json.loads(json_str)
                 else:
                     r_json = {}

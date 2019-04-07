@@ -282,7 +282,7 @@ def URLSFOUR(dt,timezone,logger,**kwargs):
         api_url = format_date(current_date,li.get("api_formatter",""))
         if api_url:
             status_code, res = make_request(api_url,logger,"json",None,60,
-                **li.get("pattern_str",{}))
+                li.get("api_code","utf8"),**li.get("pattern_str",{}))
             if status_code in [202, 200]:
                 lis = res.get(li.get("itemname","item"),[])
                 for ls in lis:

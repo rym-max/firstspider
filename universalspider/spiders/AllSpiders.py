@@ -9,10 +9,10 @@
 @Desc    :   ALL need to run spiders are here
 '''
 
-from .templateein import TemplateeinSpider
+from .templatezwei import TemplatezweiSpider
 
 
-class PeopleSpider(TemplateeinSpider):
+class PeopleSpider(TemplatezweiSpider):
     '''production scene need exclusive class now
 
     due to main problem above, should customize custom_settings as attributes and declare its own name
@@ -22,7 +22,7 @@ class PeopleSpider(TemplateeinSpider):
     custom_settings = {
         "USER_AGENT": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36",
         "ITEM_PIPELINES":{
-            "universalspider.pipelines.NewsStandPipeline": 300
+            "universalspider.pipelines.NewsStandFilterPipeline": 300
         },
         "DOWNLOAD_DELAY": 1
     }

@@ -12,17 +12,18 @@
 # here put the import lib
 
 CONFIG_HOST	="localhost"
-CONFIG_DB	="tempnews"
+CONFIG_DB	="test"
 CONFIG_PORT	=3306
 CONFIG_PSWD ="8512"
-CONFIG_TABLE="news"
-CONFIG_USER	="user"
+CONFIG_TABLE="config_rules"
+CONFIG_USER	="root"
 
 DATA_DB		="tempnews"
 DATA_HOST	="localhost"
 DATA_PORT	=3306
+DATA_TABLE  ="news"
 DATA_PSWD	="8512"
-DATA_USER	="user"
+DATA_USER	="root"
 
 
 SQL_DB		="none"

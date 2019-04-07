@@ -18,7 +18,7 @@ class TemplatezweiSpider(CrawlSpider):
     other details see scrapy documention
     """
 
-    name = 'templateEin'
+    name = 'templateZwei'
 
     def __init__(self, *args, **kwargs):
         """initialize all params from configs/xxx.json file
@@ -49,7 +49,7 @@ class TemplatezweiSpider(CrawlSpider):
 
         start_urls = config.get("start_urls",{})
         if start_urls:
-            Case = start_urls.get("case","1")
+            Case = start_urls.get("case",10)
             Kwargs = start_urls.get("Kwargs",{})
             self.start_urls = get_start_urls(self.last_date, self.timezone,
             Case, self.logger, **Kwargs)
