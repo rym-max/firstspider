@@ -1,0 +1,88 @@
+{
+    "spider": "templateEin",
+    "website": "工信部",
+    "type": "新闻",
+    "index": "http://www.miit.gov.cn/index.html",
+    "settings": {
+        "USER_AGENT": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36",
+        "ITEM_PIPELINES":{
+            "universalspider.pipelines.NewsSpiderPipeline": 300
+         },
+     "DOWNLOAD_DELAY": 1
+    },
+    "start_urls": {
+        "type": "static",
+        "value": [
+            "http://www.miit.gov.cn/n1146290/n1146392/index.html","http://www.miit.gov.cn/n1146290/n1146397/index.html","http://www.miit.gov.cn/n1146290/n4388791/index.html",
+            "http://www.miit.gov.cn/n1146290/n1146402/index.html","http://www.miit.gov.cn/n1146290/n1146407/index.html","http://www.miit.gov.cn/n1146290/n4337866/index.html"
+        ]
+    },
+    "allowed_domains": [
+        "miit.gov.cn"
+    ],
+    "core_words":["中德","德国"],
+    "language":"CHINESE",
+    "filter":["中德","德国"],
+    "filter_all":0,
+    "need_text":0,
+    
+
+    "table":"news",
+
+    "rules": "miit",
+    "item": {
+        "class": "NewsItem",
+        "loader": "NewsLoader",
+        "attrs": {
+            "title":[
+                {
+                    "method": "xpath",
+                    "args": [
+                        "//title/text()"
+                    ]
+                }
+            ],
+            "url":[
+                {
+                    "method": "attr",
+                    "args": [
+                        "url"
+                    ]
+                }
+            ],
+            "text":[
+                {
+                    "method":"xpath",
+                    "args": [
+                        "//div[@id='con_con']//p//text()"
+                    ]
+                }
+            ],
+            "datetime":[
+                {
+                    "method": "xpath",
+                    "args":[
+                        "//div[@class='cinfo center']/span[@id='con_time']//text()"
+                    ],
+                    "re":"发布时间：(\\d+-\\d+-\\d)"
+                }
+            ],
+            "source":[
+                {
+                    "method": "value",
+                    "args": [
+                        "工信部"
+                    ]
+                }
+            ],
+            "category":[
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//div[contains(@class,mnav)]/span/a[3]/text()"
+                    ]
+                }
+            ]
+        }
+    }
+}

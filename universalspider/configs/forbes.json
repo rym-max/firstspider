@@ -1,0 +1,66 @@
+{
+    "spider": "templateEin",
+    "website": "百度百科",
+    "type": "词条",
+    "index": "http://baike.baidu.com/",
+    "settings": {
+        "USER_AGENT": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36",
+        "ITEM_PIPELINES":{
+            "spider_usual.pipelines.FirstFilterPipeline": 300,
+            "spider_usual.pipelines.BaikeUsualPipeline": 310
+        }
+    },
+    "start_urls": {
+        "type": "dynamic",
+        "method": "fromname",
+        "need_process": 1,
+        "args":[
+            "forbesU30.csv",
+            "http://baike.baidu.com/item/%s",
+            1
+        ]
+    },
+    "allowed_domains": [
+        "baike.baidu.com"
+    ],
+    "core_words":["同济"],
+    "filter_all":0,
+    "need_text":0,
+    "need_weight":1,
+    "num":1,
+    "input_file":"forbesU30.csv",
+    
+
+    "rules": "forbes",
+    "item": {
+        "class": "BaikeItem",
+        "loader": "BaikeLoader",
+        "attrs": {
+            "name":[
+                {
+                    "method": "xpath",
+                    "args": [
+                        "//title//text()"
+                    ],
+                    "re":"[\u4e00-\u9fa5a-zA-Z ]{1,}"
+                }
+            ],
+            "url":[
+                {
+                    "method": "attr",
+                    "args": [
+                        "url"
+                    ]
+                }
+            ],
+            "text":[
+                {
+                    "method": "xpath",
+                    "args": [
+                        "//div[contains(@class,\"body-wrapper\")]//div[@class=\"main-content\"]/div[not(contains(@class,\"reference\")) and not(contains(@class,\"open-tag\"))]//text()"
+                    ]
+                }
+            ]
+        }
+    }
+}

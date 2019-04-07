@@ -1,0 +1,113 @@
+{
+    "spider": "templateEin",
+    "website": "https://www.sueddeutsche.de/",
+    "type": "智库",
+    "index": "https://www.sueddeutsche.de/",
+    "settings": {
+        "USER_AGENT": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36",
+        "ITEM_PIPELINES":{
+            "universalspider.pipelines.NewsSpiderPipeline": 300
+         },
+     "DOWNLOAD_DELAY": 1
+    },
+    "start_urls": {
+		"type": "static",
+		"value":["https://www.swp-berlin.org/publikationen/","https://www.swp-berlin.org/kurz-gesagt/"]
+    },
+    "allowed_domains": [
+        "sueddeutsche.de"
+    ],
+    "core_words":[],
+    "language":"GERMAN",
+    "filter_all":0,
+    "need_text":0,
+    
+
+    "table":"news",
+
+    "rules": "sueddeu",
+    "item": {
+        "class": "NewsItem",
+        "loader": "NewsLoader",
+        "attrs": {
+            "title":[
+                {
+                    "method": "xpath",
+                    "args": [
+                        "//title/text()"
+					]
+                }
+            ],
+            "url":[
+                {
+                    "method": "attr",
+                    "args": [
+                        "url"
+                    ]
+                }
+            ],
+            "keywords":[
+                {
+                    "method": "xpath",
+                    "args":[
+                        "//meta[@name='keywords']/@content"
+                    ]
+                }
+            ],
+            "text":[
+                {
+                    "method":"xpath",
+                    "args": [
+                        "//section[@class='body']//p//text()"
+                    ]
+                }
+            ],
+            "datetime":[
+                {
+                    "method": "xpath",
+                    "args":[
+						"//time/@datetime"
+					]
+                }
+            ],
+            "source":[
+                {
+                    "method": "value",
+                    "args": [
+                        "sueddeutsche zeitung"
+                    ]
+                }
+            ],
+            "author":[
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//section[@class='authors']//strong//span//text()"
+                    ]
+                },
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//span[@class='authors']//text()"
+                    ]
+                }
+            ],
+            "category":[
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//div[@class='nav']/a[last()]/text()"
+                    ]
+                }
+            ],
+            "description":[
+                {
+                    "method":"re",
+                    "args":[
+                        "<section class=\"header\".*?<section class=\"body\".*?</section>"
+                    ]
+                }
+            ]
+        }
+    }
+}

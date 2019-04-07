@@ -1,0 +1,102 @@
+{
+    "spider": "templateEin",
+    "website": "http://www.spiegel.de/",
+    "type": "智库",
+    "index": "http://www.spiegel.de/",
+    "settings": {
+        "USER_AGENT": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36",
+        "ITEM_PIPELINES":{
+            "universalspider.pipelines.NewsSpiderPipeline": 300
+         },
+     "DOWNLOAD_DELAY": 1
+    },
+    "start_urls": {
+		"type": "static",
+        "value":["http://www.spiegel.de/politik/archiv-2019093.html","http://www.spiegel.de/kultur/archiv-2019090.html",
+        "http://www.spiegel.de/wirtschaft/archiv-2019090.html","http://www.spiegel.de/panorama/archiv-2019087.html",
+        "http://www.spiegel.de/netzwelt/archiv-2019082.html","http://www.spiegel.de/wissenschaft/archiv-2019083.html",
+        "http://www.spiegel.de/thema/meinung/archiv-2019081.html"]
+    },
+    "allowed_domains": [
+        "spiegel"
+    ],
+    "core_words":[],
+    "language":"GERMAN",
+    "filter_all":0,
+    "need_text":0,
+    
+
+    "table":"news",
+
+    "rules": "spiegel",
+    "item": {
+        "class": "NewsItem",
+        "loader": "NewsLoader",
+        "attrs": {
+            "title":[
+                {
+                    "method": "xpath",
+                    "args": [
+                        "//title/text()"
+					]
+                }
+            ],
+            "url":[
+                {
+                    "method": "attr",
+                    "args": [
+                        "url"
+                    ]
+                }
+            ],
+            "keywords":[
+                {
+                    "method": "xpath",
+                    "args":[
+                        "//meta[@name='news_keywords']/@content"
+                    ]
+                }
+            ],
+            "text":[
+                {
+                    "method":"xpath",
+                    "args": [
+                        "//div[@class='spArticleContent']//p//text()"
+                    ]
+                }
+            ],
+            "datetime":[
+                {
+                    "method": "xpath",
+                    "args":[
+						"//meta[@name='date']/@content"
+					]
+                }
+            ],
+            "source":[
+                {
+                    "method": "value",
+                    "args": [
+                        "SPIEGEL ONLINE"
+                    ]
+                }
+            ],
+            "author":[
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//p[@class='author']/text()"
+                    ]
+                }
+            ],
+            "category":[
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//body/@id"
+                    ]
+                }
+            ]
+        }
+    }
+}

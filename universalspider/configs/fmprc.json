@@ -1,0 +1,116 @@
+{
+    "spider": "templateEin",
+    "website": "外交部",
+    "type": "新闻",
+    "index": "https://www.fmprc.gov.cn/web/",
+    "settings": {
+        "USER_AGENT": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36",
+        "ITEM_PIPELINES":{
+            "universalspider.pipelines.NewsSpiderPipeline": 300
+         },
+     "DOWNLOAD_DELAY": 1
+    },
+    "start_urls": {
+        "type": "dynamic",
+        "method": "frompage",
+        "args":{
+            "forma_page":[
+                ["https://www.fmprc.gov.cn/web/zyxw/default.shtml",[]],["https://www.fmprc.gov.cn/web/zyxw/default_%d.shtml",[1,23]],
+                ["https://www.fmprc.gov.cn/web/wjbzhd/default.shtml",[]],["https://www.fmprc.gov.cn/web/wjbzhd/default_%d.shtml",[1,23]],
+                ["https://www.fmprc.gov.cn/web/wjbxw_673019/default.shtml",[]],["https://www.fmprc.gov.cn/web/wjbxw_673019/default_%d.shtml",[1,23]],
+                ["https://www.fmprc.gov.cn/web/fyrbt_673021/jzhsl_673025/default.shtml",[]],["https://www.fmprc.gov.cn/web/fyrbt_673021/jzhsl_673025/default_%d.shtml",[1,23]],
+                ["https://www.fmprc.gov.cn/web/fyrbt_673021/jzhsl_673027/default.shtml",[]],["https://www.fmprc.gov.cn/web/fyrbt_673021/jzhsl_673027/default_%d.shtml",[1,23]],
+                ["https://www.fmprc.gov.cn/web/dszlsjt_673036/ds_673038/default.shtml",[]],["https://www.fmprc.gov.cn/web/dszlsjt_673036/ds_673038/default_%d.shtml",[1,23]],
+                ["https://www.fmprc.gov.cn/web/dszlsjt_673036/zls_673040/default.shtml",[]],["https://www.fmprc.gov.cn/web/dszlsjt_673036/zls_673040/default_%d.shtml",[1,23]],
+                ["https://www.fmprc.gov.cn/web/zwbd_673032/wshd_673034/default.shtml",[]],["https://www.fmprc.gov.cn/web/zwbd_673032/wshd_673034/default_%d.shtml",[1,23]],
+                ["https://www.fmprc.gov.cn/web/zwbd_673032/ywfc_673029/default.shtml",[]],["https://www.fmprc.gov.cn/web/zwbd_673032/ywfc_673029/default_%d.shtml",[1,23]],
+                ["https://www.fmprc.gov.cn/web/zwbd_673032/gzhd_673042/default.shtml",[]],["https://www.fmprc.gov.cn/web/zwbd_673032/gzhd_673042/default_%d.shtml",[1,23]],
+                ["https://www.fmprc.gov.cn/web/zwbd_673032/nbhd_673044/default.shtml",[]],["https://www.fmprc.gov.cn/web/zwbd_673032/nbhd_673044/default_%d.shtml",[1,23]],
+                ["https://www.fmprc.gov.cn/web/zwbd_673032/jghd_673046/default.shtml",[]],["https://www.fmprc.gov.cn/web/zwbd_673032/jghd_673046/default_%d.shtml",[1,23]],
+                ["https://www.fmprc.gov.cn/web/zwbd_673032/fnhd_673048/default.shtml",[]],["https://www.fmprc.gov.cn/web/zwbd_673032/fnhd_673048/default_%d.shtml",[1,23]]
+            ]
+        }
+    },
+    "allowed_domains": [
+        "fmprc.gov.cn"
+    ],
+    "core_words":["中德","德国"],
+    "language":"CHINESE",
+    "filter_all":0,
+    "need_text":0,
+    
+
+    "table":"news",
+
+    "rules": "fmprc",
+    "item": {
+        "class": "NewsItem",
+        "loader": "NewsLoader",
+        "attrs": {
+            "title":[
+                {
+                    "method": "xpath",
+                    "args": [
+                        "//div[@class='title']/text()"
+                    ]
+                }
+            ],
+            "url":[
+                {
+                    "method": "attr",
+                    "args": [
+                        "url"
+                    ]
+                }
+            ],
+            "keywords":[
+                {
+                    "method": "xpath",
+                    "args":[
+                        "//meta[@http-equiv='keywords']/@content"
+                    ]
+                }
+            ],
+            "text":[
+                {
+                    "method":"xpath",
+                    "args": [
+                        "//div[@class='content']//p//text()"
+                    ]
+                }
+            ],
+            "datetime":[
+                {
+                    "method": "xpath",
+                    "args":[
+                        "//div[@class='vibox']//div[@class='time']//span[@id='News_Body_Time']/text()"
+                    ]
+                }
+            ],
+            "source":[
+                {
+                    "method": "xpath",
+                    "args": [
+                        "外交部"
+                    ]
+                }
+            ],
+            "author":[
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//meta[@name='author']/@content"
+                    ]
+                }
+            ],
+            "category":[
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//div[@class='nav']/a[last()]/text()"
+                    ]
+                }
+            ]
+        }
+    }
+}

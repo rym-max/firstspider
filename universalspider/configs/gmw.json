@@ -1,0 +1,109 @@
+{
+    "spider": "templateEin",
+    "website": "光明网",
+    "type": "新闻",
+    "index": "http://www.gmw.cn",
+    "settings": {
+        "USER_AGENT": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:64.0) Gecko/20100101 Firefox/64.0",
+		"ITEM_PIPELINES":{
+            "universalspider.pipelines.NewsSpiderPipeline": 300
+         },
+     "DOWNLOAD_DELAY": 1
+    },
+    "start_urls": {
+		"type": "dynamic",
+        "method": "frompage",
+        "args":{
+            "forma_page":[
+				["http://world.gmw.cn/node_4661.htm",[]],
+				["http://world.gmw.cn/node_4485.htm",[]],
+				["http://world.gmw.cn/node_24179.htm",[]],
+				["http://world.gmw.cn/node_4660.htm",[]],
+				["http://world.gmw.cn/node_4696.htm",[]]
+            ]
+        }
+    },
+    "allowed_domains": [
+        "gmw.cn"
+    ],
+    "core_words":["中德","德国"],
+    "language":"CHINESE",
+    "filter_all":0,
+    "need_text":0,
+    
+
+    "table":"news",
+
+    "rules": "gmw",
+    "item": {
+        "class": "NewsItem",
+        "loader": "NewsLoader",
+        "attrs": {
+            "title":[
+                {
+                    "method": "xpath",
+                    "args": [
+                        "//title/text()"
+                    ],
+                    "re" : "(.*)"
+                }
+            ],
+            "url":[
+                {
+                    "method": "attr",
+                    "args": [
+                        "url"
+                    ]
+                }
+            ],
+            "keywords":[
+                {
+                    "method": "xpath",
+                    "args":[
+                        "//meta[@name='keywords']/@content"
+                    ]
+                }
+            ],
+            "text":[
+                {
+                    "method":"xpath",
+                    "args": [
+                        "//div[@id='articleBox']//p//text()"
+                    ]
+                }
+            ],
+            "datetime":[
+                {
+                    "method": "xpath",
+                    "args":[
+                        "//meta[@name='publishdate']/@content"
+                    ]
+                }
+            ],
+            "source":[
+                {
+                    "method":"value",
+                    "args":[
+                        "光明网"
+					]
+                }
+            ],
+            "author":[
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//meta[@name='author']/@content"
+                    ]
+                }
+            ],
+            "category":[
+                {
+                    "method" : "xpath",
+                    "args" : [
+                        "//div[@class='m-crumbs']/a[last()]/text()"
+                    ]
+                }
+            ]
+        }
+    }
+}

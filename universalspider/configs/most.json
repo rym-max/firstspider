@@ -1,0 +1,177 @@
+{
+    "spider": "templateEin",
+    "website": "科技部",
+    "type": "新闻",
+    "index": "http://www.most.gov.cn/",
+    "settings": {
+        "USER_AGENT": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36",
+        "ITEM_PIPELINES":{
+            "universalspider.pipelines.NewsSpiderPipeline": 300
+         },
+     "DOWNLOAD_DELAY": 1
+    },
+    "start_urls": {
+        "type": "dynamic",
+        "method": "frompage",
+        "args":{
+            "forma_page":[
+                ["http://www.most.gov.cn/yw/index_10032.htm",[]],["http://www.most.gov.cn/yw/index_10032_%d.htm",[1,2]],
+                ["http://www.most.gov.cn/kjbgz/index.htm",[]],["http://www.most.gov.cn/kjbgz/index_%d.htm",[1,2]],
+                ["http://www.most.gov.cn/gnwkjdt/index.htm",[]],["http://www.most.gov.cn/gnwkjdt/index_%d.htm",[1,2]]
+            ]
+        }
+    },
+    "allowed_domains": [
+        "gov.cn","xinhuanet.com"
+    ],
+    "core_words":["中德","德国"],
+    "language":"CHINESE",
+    "filter_all":0,
+    "need_text":0,
+    
+
+    "table":"news",
+
+    "rules": "most",
+    "item": {
+        "class": "NewsItem",
+        "loader": "NewsLoader",
+        "attrs": {
+            "title":[
+                {
+                    "method": "xpath",
+                    "args": [
+                        "//title/text()"
+                    ],
+                    "re" : "(.*?)_"
+                },
+                {
+                    "method": "xpath",
+                    "args": [
+                        "//title/text()"
+                    ],
+                    "re" : "(.*?)-"
+                },
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//div[@class='title']/h2/text()"
+                    ]
+                }
+            ],
+            "url":[
+                {
+                    "method": "attr",
+                    "args": [
+                        "url"
+                    ]
+                }
+            ],
+            "keywords":[
+                {
+                    "method": "xpath",
+                    "args":[
+                        "//meta[@name='keywords']/@content"
+                    ]
+                }
+            ],
+            "text":[
+                {
+                    "method":"xpath",
+                    "args": [
+                        "//div[@class='article']//p//text()"
+                    ]
+                },
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//div[@class='pages_content']//p//text()"
+                    ]
+                },
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//div[@class='main-aticle']//p//text()"
+                    ]
+                },
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//div[@id='content']//p//text()"
+                    ]
+                },
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//div[@id='p-detail']//p//text()"
+                    ]
+                },
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//div[@class='txtcont']//p//text()"
+                    ]
+                },
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//div[@class='content']//p//text()"
+                    ]
+                }
+            ],
+            "datetime":[
+                {
+                    "method": "xpath",
+                    "args":[
+                        "//span[@class='h-time']/text()"
+                    ],
+                    "re" : "(\\d*-\\d*-\\d*)"
+                },
+                {
+                    "method" : "xpath",
+                    "args":[
+                        "//meta[@name='firstpublishedtime']/@content"
+                    ],
+                    "re":"(\\d*-\\d*-\\d*)"
+                },
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//div[@class='source']//text()"
+                    ],
+                    "re":"(\\d*-\\d*-\\d*)"
+                }
+            ],
+            "source":[
+                {
+                    "method": "value",
+                    "args": [
+                        "科技部"    
+                    ]
+                }
+            ],
+            "author":[
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//meta[@name='author']/@content"
+                    ]
+                }
+            ],
+            "category":[
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//meta[@name='lanmu']/@content"
+                    ]
+                },
+                {
+                    "method":"xpath",
+                    "args":[
+                        "//div[@class='news-position']/a[last()]/text()"
+                    ]
+                }
+            ]
+        }
+    }
+}
