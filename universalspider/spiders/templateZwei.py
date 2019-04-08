@@ -39,7 +39,7 @@ class TemplatezweiSpider(CrawlSpider):
 
         # 获取上次爬取日期
         self.last_date = get_dates(self._name, self.logger) 
-        self.current_date = set_dates(self._name, self.logger)
+        
         # 获取rules, allowed_domains, start_urls
         self.rules = get_rules(self._name, self.logger) #建议rules 通用化
         
@@ -56,6 +56,10 @@ class TemplatezweiSpider(CrawlSpider):
         else:
             self.start_urls = []
 
+        #最后改日期
+        self.current_date = set_dates(self._name, self.logger)
+        
+        self.logger.debug("start_urls<<<<:%s" % str(self.start_urls))
         # for _compile_rules
         super(TemplatezweiSpider, self).__init__(*args,**kwargs)
 

@@ -22,7 +22,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 
 import pymssql
-from config_INFO import (CONFIG_DB, CONFIG_HOST, CONFIG_PORT, CONFIG_PSWD,
+from .config_INFO import (CONFIG_DB, CONFIG_HOST, CONFIG_PORT, CONFIG_PSWD,
                          CONFIG_TABLE, CONFIG_USER)
 
 import logging
@@ -162,7 +162,7 @@ def get_dates(name,logger=default_logger):
         logger.error("<<<<[connection error]:%s" % str(e))
         return {}
     
-    sql_string = r"SELECT datetime FROM " + CONFIG_TABLE + " WHERE name=%(name)s"
+    sql_string = r"SELECT datelast FROM " + CONFIG_TABLE + " WHERE name=%(name)s"
     item = {
         "name":name
     }
@@ -196,7 +196,7 @@ def set_dates(name,logger=default_logger):
     #sql server
 
     #mysql
-    sql_string = r"UPDATE " + CONFIG_TABLE + r" SET datetime=%(date)s WHERE name=%(name)s"
+    sql_string = r"UPDATE " + CONFIG_TABLE + r" SET datelast=%(date)s WHERE name=%(name)s"
     
     #name & date
     current_date = datetime.datetime.now()
@@ -228,7 +228,7 @@ def judge_date(news_date,news_date_formatter=["%Y-%m-%d %H:%M:%S"],last_date=Non
             pass
         else:
             break
-    if not dd:
+    if dd:
         if dd>last_date:
             return dd,True
         else:
@@ -294,10 +294,11 @@ def make_request(url, logger, rtype="html", data=None, timeout=60, encode="utf8"
             except json.JSONDecodeError as e: 
                 logger.debug("<<<<<<[%s] :\n\r <<<<<<decode error:cannot decode json directly \n\r <<<<<<%s" % (url, str(e)))
             else:
-                if kwargs.get("json_pattern",""):
-                    pattern = kwargs.get("json_pattern","")
-                    json_str = re.search(pattern,r.text,re.DOTALL)
+                if kwargs.get("json_formatter",""):
+                    pattern = kwargs.get("json_formatter","")
+                    json_str = re.search(pattern,r.text,re.DOTALL).group()
                     r_json = json.loads(json_str)
+                    logger.debug("result pages:<<<< %s" % str(r_json))
                 else:
                     r_json = {}
             return r.status_code, r_json

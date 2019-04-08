@@ -19,7 +19,7 @@ import pymssql
 from time import strftime
 from .utils import judge_date,get_config
 import time
-from config_INFO import (DATA_DB, DATA_HOST, DATA_PORT, DATA_PSWD, DATA_USER,
+from .config_INFO import (DATA_DB, DATA_HOST, DATA_PORT, DATA_PSWD, DATA_USER,
     SQL_DB, SQL_HOST, SQL_PSWD, SQL_USER)
 from .configs import corewords
 

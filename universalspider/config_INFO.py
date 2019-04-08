@@ -18,7 +18,7 @@ CONFIG_PSWD ="8512"
 CONFIG_TABLE="config_rules"
 CONFIG_USER	="root"
 
-DATA_DB		="tempnews"
+DATA_DB		="spider_tempnews"
 DATA_HOST	="localhost"
 DATA_PORT	=3306
 DATA_TABLE  ="news"

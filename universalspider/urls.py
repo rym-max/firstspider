@@ -20,6 +20,8 @@ from .utils import get_keyword, get_date_withzone, make_request
 
 #日后再考虑既有page又有keywords
 #这部分需重新考虑，完成后删除这条注释
+import logging
+default_logger = logging.getLogger(__name__)
 
 
 def fromfunc(formatter,start,end,*args):
@@ -110,8 +112,9 @@ def number_strs(digits,number):
     return "".join(n_l)
 
 def format_date(date,formatter):
+    default_logger.debug("i'm here 4")
     now_time = date.strftime("%Y-%m-%d-%H-%M-%S")
-    yy = now_time.year
+    yy = date.year
     year_start_time = datetime.datetime(yy,1,1,0,0,0)
     times = now_time.split("-")
     value_date ={
@@ -124,10 +127,11 @@ def format_date(date,formatter):
         "YY":times[0][2:4],
         "m":str(int(times[1])),
         "d":str(int(times[2])),
-        "days": str((now_time - year_start_time).days + 1),
-        "days-1":str((now_time - year_start_time).days),
-        "UNIX":str(int(time.mktime(now_time.timetuple())))
+        "days": str((date - year_start_time).days + 1),
+        "days-1":str((date - year_start_time).days),
+        "UNIX":str(int(time.mktime(date.timetuple())))
     }
+    default_logger.debug("i'm here 5")
     return formatter % value_date
 
 def format_number(formatter,number=0,digits=0):
@@ -244,7 +248,7 @@ def URLSTWO(dt,timezone,logger,**kwargs):
     results = []
     for li in kwargs.get("pageargs",[]):
         dd = day_difference if day_difference < li.get("max",7) else li.get("max",7)
-        for i in range(0,day_difference+1):
+        for i in range(0,dd+1):
             url = li.get(str(i),"")
             if url:
                 results.append(url)
@@ -257,7 +261,7 @@ def URLSTHREE(dt,timezone,logger,**kwargs):
         spider  :logger
         kwargs  :value
     '''
-
+    raise ValueError
 
 def URLSFOUR(dt,timezone,logger,**kwargs):
     '''get date from api
@@ -275,14 +279,17 @@ def URLSFOUR(dt,timezone,logger,**kwargs):
         json文件，以所有url为start_url，故不在去重范围，但理论上不重复
         只做xml与json的转换识别为dict
     '''
+    logger.debug("i'm here 2")
     current_date = get_date_withzone(datetime.datetime.now(),timezone)
-    
+    logger.debug("i'm here 3")
     results = []
     for li in kwargs.get("api_li",[]):
         api_url = format_date(current_date,li.get("api_formatter",""))
         if api_url:
             status_code, res = make_request(api_url,logger,"json",None,60,
                 li.get("api_code","utf8"),**li.get("pattern_str",{}))
+            logger.debug("response result<<<<%s" % str(res))
+            logger.debug("response status<<<<%s" % str(status_code))
             if status_code in [202, 200]:
                 lis = res.get(li.get("itemname","item"),[])
                 for ls in lis:
@@ -297,8 +304,9 @@ def get_start_urls(dt,timezone,case,logger,**kwargs):
 
 
     '''
+    logger.debug("i'm here 1")
     if case == 0:
-        #static
+        #dateformatter
         try:
             return URLSZERO(dt,timezone,logger,**kwargs)
         except Exception as e:
@@ -312,18 +320,24 @@ def get_start_urls(dt,timezone,case,logger,**kwargs):
             logger.warn(e)
 
     elif case == 2:
-        #need date
+        #select via date
         try:
             return URLSTWO(dt,timezone,logger,**kwargs)
         except Exception as e:
             logger.warn(e)
+
     elif case == 3:
-        #from josn
+        #null
         try:
             return URLSTHREE(dt,timezone,logger,**kwargs)
         except Exception as e:
             logger.warn(e)
-
+    elif case == 4:
+        #from josn
+        try:
+            return URLSFOUR(dt,timezone,logger,**kwargs)
+        except Exception as e:
+            logger.warn(e)
     else:
         
         return []

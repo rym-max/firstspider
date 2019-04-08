@@ -9,7 +9,7 @@
 @Desc    :   ALL need to run spiders are here
 '''
 
-from .templatezwei import TemplatezweiSpider
+from .templateZwei import TemplatezweiSpider
 
 
 class PeopleSpider(TemplatezweiSpider):
