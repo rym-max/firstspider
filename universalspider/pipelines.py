@@ -242,7 +242,7 @@ class NewsStandFilterPipeline(object):
         new_date = item.get('datetime', '1970-1-1 00:00:00')
         author = item.get('author','')
         keywords = item.get('keywords', '')
-        
+
         if self.filter:
             for ff in self.filter:
                 if ff in title or ff in text:
@@ -251,9 +251,9 @@ class NewsStandFilterPipeline(object):
         else:
             tag=True  
 
-        news_date, tag_date = judge_date(new_date,self.news_date_formatter,self.last_date, self.timezone,spider.logger)
+        news_date, tag_date = judge_date(new_date,self.news_date_formatter,self.last_date, self.timezone)
 
-        if tag and tag_date:
+        if tag and (tag_date or not self.need_filter_date):
             self.related_count +=1
             sql = "INSERT INTO "+self.table+" (`title`,`date`,`description`,`source`,`creator`,`subject`,`url`,`attach`,`CategoryId`) "+ \
                 "VALUES (%(title)s,%(date)s,%(description)s,%(source)s,%(creator)s,%(subject)s,%(url)s,%(attach)s,%(CategoryId)s)"
@@ -322,6 +322,7 @@ class NewsStandFilterPipeline(object):
         self.last_date = spider.last_date
         self.timezone = spider.timezone
         self.news_date_formatter = config.get('date_formatter',["%Y-%m-%d %H:%M:%S"])
+        self.need_filter_date = config.get("need_filter_date",True) #日报
 
 
 class NewsSQLFilterPipeline(object):
@@ -342,7 +343,7 @@ class NewsSQLFilterPipeline(object):
         category = item.get('category', '')
         author = item.get('author','')
         #keywords = item.get('keywords', '')
-
+        
         if self.filter:
             for ff in self.filter:
                 if ff in title or ff in text:
@@ -351,10 +352,9 @@ class NewsSQLFilterPipeline(object):
         else:
             tag=True  
 
-        news_date, tag_date = judge_date(date_time,self.news_date_formatter,self.last_date, self.timezone,self.logger)
+        news_date, tag_date = judge_date(date_time,self.news_date_formatter,self.last_date, self.timezone)
 
-
-        if tag and tag_date:
+        if tag and (tag_date or not self.need_filter_date):
             sql = "INSERT INTO "+self.table+ " (`title`,`date`,`description`,`source`,`creator`,`subject`,`url`,`attach`,`CategoryId`,`dcdescription`) " + \
                 "VALUES (%(title)s,%(date)s,%(description)s,%(source)s,%(creator)s,%(subject)s,%(url)s,%(attach)s,%(CategoryId)s,%(dcdescription)s)"
 
@@ -421,3 +421,4 @@ class NewsSQLFilterPipeline(object):
         self.last_date = spider.last_date
         self.timezone = spider.timezone
         self.news_date_formatter = config.get('date_formatter',["%Y-%m-%d %H:%M:%S"])
+        self.need_filter_date = config.get("need_filter_date",True) #日报

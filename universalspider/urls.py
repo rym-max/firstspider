@@ -16,7 +16,7 @@ import time
 import datetime
 import json
 from os.path import realpath, dirname
-from .utils import get_keyword, get_date_withzone, make_request
+from .utils import get_keyword, get_date_withzone, make_request, set_dates
 
 #日后再考虑既有page又有keywords
 #这部分需重新考虑，完成后删除这条注释
@@ -104,9 +104,9 @@ def getdate():
 #below new util function
 def number_strs(digits,number):
     n = int(number)
-    if n >= 10 ** digits:
+    if n >= 10 ** (digits-1):
         return str(n)
-    n += 10**digits
+    n += 10**(digits-1)
     n_l = list(str(n))
     n_l[0]="0"
     return "".join(n_l)
@@ -129,6 +129,7 @@ def format_date(date,formatter):
         "d":str(int(times[2])),
         "days": str((date - year_start_time).days + 1),
         "days-1":str((date - year_start_time).days),
+        "days3": number_strs(3,(date - year_start_time).days + 1),
         "UNIX":str(int(time.mktime(date.timetuple())))
     }
     default_logger.debug("i'm here 5")
@@ -145,7 +146,7 @@ def format_number(formatter,number=0,digits=0):
 def URLSZERO(dt,timezone,logger,**kwargs):
     '''time formatter, e.g. daily newspaper
         dt      :date
-        spider  :logger
+        spider  :spider
         kwargs  :formatter,start_hour
 
         description: 
@@ -154,35 +155,33 @@ def URLSZERO(dt,timezone,logger,**kwargs):
     '''
     current_date = get_date_withzone(datetime.datetime.now(),timezone)
     last_date = get_date_withzone(dt,timezone)
-    time_delta = current_date - last_date
-    day_difference = time_delta.days
-    second_difference = time_delta.seconds
-    seconds_now = current_date.hour * 3600 + current_date.minute * 60 + current_date.second 
-
-    start_hour = kwargs.get('start_hour',8) #判断起始时间
+    
     oneday_delta = datetime.timedelta(1,0,0)
-    
-    first_date = last_date
-    day_loop = day_difference
 
-    if second_difference > second_difference:
-        day_difference +=1
-
-    if last_date.hour >= start_hour:
-        first_date += oneday_delta
-    else:
-        day_loop += 1
-    
-    if current_date.hour < start_hour:
-        day_loop -= 1
-
-    loop_date = first_date
-    formatter = kwargs['formatter']
     results = []
-    for _ in range(0,day_loop):
-        results.append(format_date(loop_date,formatter))
-        loop_date += oneday_delta
-    
+    for li in kwargs.get("pageargs",[]):
+        start_hour = li.get("start_hour",None)
+
+        start_date = last_date
+        if start_hour:
+            if last_date.hour >= start_hour:
+                start_date += oneday_delta
+
+            if current_date.hour < start_hour:
+                current_str = current_date.strftime("%Y-%m-%d 00:00:00")
+            else:
+                current_str = (current_date+oneday_delta).strftime("%Y-%m-%d 00:00:00")
+        else:
+            current_str = current_date.strftime("%Y-%m-%d %H:%M:%S")
+
+        end_date = datetime.datetime.strptime(current_str,"%Y-%m-%d %H:%M:%S")
+
+        loop_date = start_date
+        formatter = li['formatter']
+        while loop_date < end_date:
+            results.append(format_date(loop_date,formatter))
+            loop_date += oneday_delta
+
     return results
     
 
@@ -193,32 +192,43 @@ def URLSONE(dt,timezone,logger,**kwargs):
         kwargs  :
             pageargs:[{
                 formatter:,
-                pages:[start_number,ratio(page/days),last_page,digits]
+                pages:[
+                    start_number, default 0
+                    ratio(page/days), default 0
+                    last_page, default 0
+                    digits default 0
+                    ]
             }]
 
         description:
         根据天数计算页数 将页数匹配进数字 同样适用全静态
         问题 01和1两个区别怎么办 number_strs digits
     '''
+    logger.debug("i'm here 2")
     current_date = get_date_withzone(datetime.datetime.now(),timezone)
     last_date = get_date_withzone(dt, timezone)
     time_delta = current_date - last_date
     day_difference = time_delta.days + 1 #可能少个一天，按大的算
-
+    logger.debug("i'm here 3")
     results = []
 
     for li in kwargs.get("pageargs",[]):
         formatter = li.get('formatter',"")
         pages = li.get('pages',"")
+        logger.debug("i'm here 4")
         if pages:
-            start_number = [0]
+            start_number = pages[0]
             ratio = pages[1]
             last_page = pages[2]
             digits = pages[3]
 
+            logger.debug("i'm here 5")
             page_difference = int(day_difference * ratio) + 1
+            logger.debug("i'm here 6")
             pa_di = page_difference if page_difference < last_page else last_page
+            logger.debug("i'm here 7 %s----%s" % (str(start_number), str(pa_di)))
             for i in range(start_number, start_number + pa_di):
+                logger.debug("i'm here 8")
                 results.append(format_number(formatter,i,digits))
         else:
             results.append(format_number(formatter,0,0))

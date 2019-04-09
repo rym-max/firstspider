@@ -181,9 +181,10 @@ def get_dates(name,logger=default_logger):
             cnx.close()
             return None
 
-def set_dates(name,logger=default_logger):
+def set_dates(name, date=None, logger=default_logger):
     '''set current date in database
 
+        date str %Y-%m-%d %H:%M:%S
     '''
     #pymysql!!!
     try:
@@ -203,7 +204,7 @@ def set_dates(name,logger=default_logger):
 
     item = {
         "name":name,
-        "date":current_date.strftime("%Y-%m-%d %H:%M:%S")
+        "date":date if date else current_date.strftime("%Y-%m-%d %H:%M:%S")
     }
 
     try:
@@ -233,7 +234,7 @@ def judge_date(news_date,news_date_formatter=["%Y-%m-%d %H:%M:%S"],last_date=Non
             return dd,True
         else:
             return dd,False
-    logger.warn("<<<<[warn]:error in date decode ")
+    logger.warn("<<<<[warn]:error in date decode %s" % str(news_date))
     return None,False
 
 def get_keyword(file):

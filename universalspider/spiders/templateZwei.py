@@ -57,11 +57,12 @@ class TemplatezweiSpider(CrawlSpider):
             self.start_urls = []
 
         #最后改日期
-        self.current_date = set_dates(self._name, self.logger)
+        self.current_date = set_dates(self._name, logger=self.logger)
         
         self.logger.debug("start_urls<<<<:%s" % str(self.start_urls))
         # for _compile_rules
         super(TemplatezweiSpider, self).__init__(*args,**kwargs)
+        self.logger.debug("rules<<<<<:%s" % str(self.rules))
 
 
     def parse_start_url(self,response):

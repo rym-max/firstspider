@@ -103,6 +103,10 @@ rules = {
         Rule(LinkExtractor(allow=r'-\d+\.html',restrict_xpaths='//article//a'),callback='parse_item'),
     ),
 
+    "handelsblatt":(
+        Rule(LinkExtractor(allow=r'/\d+\.html',restrict_xpaths='//ul[@class="vhb-teaser-list"]//li'),callback='parse_item'),
+        Rule(LinkExtractor(allow=r'\?p\d+=\d+', restrict_xpaths='//a[@rel="next"]')),
+    ),
     #2019两会环球网
     # 'huanqiu':(
     #     Rule(LinkExtractor(allow=r'/\d+-\d+/\d+\.html\?agt=\d', restrict_xpaths='//div[@class="fallsFlow"]//li[@class="item"]'), callback='parse_item', follow=True),
