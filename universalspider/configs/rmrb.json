@@ -1,24 +1,25 @@
 {
-    "spider": "templateEin",
+    "spider": "rmrb",
     "website": "人民日报",
     "type": "新闻",
     "index": "http://paper.people.com.cn",
     "settings": {
         "USER_AGENT": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36",
         "ITEM_PIPELINES":{
-            "universalspider.pipelines.NewsSpiderPipeline": 300
+            "universalspider.pipelines.NewsStandFilterPipeline": 300
          },
      "DOWNLOAD_DELAY": 1
     },
     "start_urls": {
-        "type": "dynamic",
-        "method": "fromdate",
-        "args":{
-            "website":"rmrb",
-            "formatters":[
-                "http://paper.people.com.cn/rmrb/html/%(YYYY)s-%(mm)s/%(dd)s/nbs.D110000renmrb_01.htm"
+        "case":0,
+        "Kwargs":{
+            "pageargs":[
+                {"formatter":"http://paper.people.com.cn/rmrb/html/%(YYYY)s-%(mm)s/%(dd)s/nbs.D110000renmrb_01.htm",
+                "start_hour":8
+                }
             ]
-        }
+        },
+        "need_process":0
     },
     "allowed_domains": [
         "paper.people.com.cn"
@@ -27,9 +28,13 @@
     "language":"CHINESE",
     "filter_all":0,
     "need_text":0,
-    
+    "need_filter_date":0,
+    "filter_depth":3,
+    "timezone":8,
+    "daylimit":"10,20,30",
+    "date_formatter":["%Y-%m-%d"],
 
-    "table":"news",
+    "table":"data",
 
     "rules": "rmrb",
     "item": {
@@ -70,9 +75,9 @@
             ],
             "datetime":[
                 {
-                    "method": "func",
+                    "method": "xpath",
                     "args":[
-                        "getdate"
+                        "//input[@name='pubtime']/@value"
                     ]
                 }
             ],

@@ -18,9 +18,9 @@ import os
 import datetime
 
 MYSQL_HOST	="localhost"
-MYSQL_DB	="test"
+MYSQL_DB	="spider_tempnews"
 MYSQL_PORT	=3306
-MYSQL_PSWD  ="8512"
+MYSQL_PSWD  ="lab760"
 MYSQL_TABLE ="config_rules"
 MYSQL_USER	="root"
 
@@ -87,7 +87,7 @@ def compile_config_rules(path=current_path,database="mysql"):
                     print(ffl,"：文件格式不符")
 
     value_item = {
-        "datelast":datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        "datelast":"2019-04-09 00:00:00"
     }
     if database == "mysql":
         sql_string = "INSERT INTO " + MYSQL_TABLE + \
@@ -182,7 +182,7 @@ def change_configs_rules(path=current_path,database="mysql",spider_name="people"
         " (`name`,`configs`,`rules`,`datelast`,`daylimit`) VALUES" + \
         " (%(name)s,%(configs)s,%(rules)s,%(datelast)s,%(daylimit)s)"
 
-    update_string = "UPDATE " + MYSQL_TABLE + " SET datelast= %(datelast)s, "+ \
+    update_string = "UPDATE " + MYSQL_TABLE + " SET "+ \
         "name=%(name)s, daylimit=%(daylimit)s, configs=%(configs)s, " + \
         "rules=%(rules)s WHERE name=%(name)s"
 
@@ -217,11 +217,12 @@ if __name__ == "__main__":
     # result = compile_config_rules()
     # if result:
     #     print("成功结束")
-
-    # result = change_date("2019-4-1 00:00:00",spider_name="people")
-    # if result:
-    #     print("成功结束")
-
-    result = change_configs_rules(spider_name="people")
+    
+    result = change_configs_rules(spider_name="euunion")
     if result:
         print("成功结束")
+
+    result = change_date("2018-01-01 00:00:00",spider_name="euunion")
+    if result:
+        print("成功结束")
+

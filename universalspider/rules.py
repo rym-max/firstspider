@@ -29,6 +29,15 @@ rules = {
     'people':(
         Rule(LinkExtractor(allow=r"\.html"), callback = 'parse_item'),
     ),
+    #新华网
+    'xinhua':(
+        Rule(LinkExtractor(allow='\\d+-\\d+/\\d+/c_\\d+\\.htm', restrict_xpaths='//ul[@class="dataList"]//li'), callback='parse_item', follow=True),
+
+    ),
+    #澎湃新闻
+    'thepaper':(
+        Rule(LinkExtractor(allow='newsDetail_forward_\\d+', restrict_xpaths='//a'), callback='parse_item'),
+    ),
 
     #环球网
     'huanqiu':(
@@ -107,6 +116,49 @@ rules = {
         Rule(LinkExtractor(allow=r'/\d+\.html',restrict_xpaths='//ul[@class="vhb-teaser-list"]//li'),callback='parse_item'),
         Rule(LinkExtractor(allow=r'\?p\d+=\d+', restrict_xpaths='//a[@rel="next"]')),
     ),
+
+    'bmwi':(
+        Rule(LinkExtractor(allow='\\.html',restrict_xpaths='//div[@class="container container-media-space"]//li'),callback='parse_item'),
+    ),
+
+    'euobserver':(
+        Rule(LinkExtractor(allow='/\\d+'),callback='parse_item'),
+    ),
+
+    'dgap':(
+        
+    ),
+
+    'kas':(
+        Rule(LinkExtractor(deny='^/document',restrict_xpaths='//tbody//a'),callback='parse_item'),
+        Rule(LinkExtractor(allow='_SearchPortlet_cur',restrict_xpaths='//div[@class="search-results"]')),
+    ),
+
+    'tagesspiegel':(
+        Rule(LinkExtractor(allow='\\d+\\.html',restrict_xpaths='//ul[@class="hcf-teaser-list"]//li[@class="hcf-teaser "]'),callback='parse_item'),
+    ),
+
+    'huffpost':(
+        Rule(LinkExtractor(restrict_xpaths='//div[@class="a-page__column a-page__column--center"]//div[@data-rapid-cpos]'),callback='parse_item'),
+    ),
+
+    'giga':(
+        Rule(LinkExtractor(restrict_xpaths='//div[@class="l__content"]//div[class="list__item"]'),callback='parse_item'),
+    ),
+
+    'fes':(
+        Rule(LinkExtractor(restrict_xpaths='//div[@class="news"]'),callback='parse_item'),
+    ),
+  
+    'ecfr':(
+        Rule(LinkExtractor(restrict_xpaths='//div[@class="post "]'),callback='parse_item'),
+    ),
+
+    'gmfus':(
+        Rule(LinkExtractor(restrict_xpaths='//div[@class="pane__content"]'),callback='parse_item'),
+    ),
+
+
     #2019两会环球网
     # 'huanqiu':(
     #     Rule(LinkExtractor(allow=r'/\d+-\d+/\d+\.html\?agt=\d', restrict_xpaths='//div[@class="fallsFlow"]//li[@class="item"]'), callback='parse_item', follow=True),

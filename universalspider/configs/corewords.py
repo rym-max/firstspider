@@ -13,7 +13,8 @@
 corewords = {
     'CHINESE' : ("中德","德国"),
 
-    'ENGLISH' : ("China", "German-Chinese", "Chinese-German", "Sino-German",
+    'ENGLISH' : ("China", "CHINA","German-Chinese", "GERMAN-CHINESE",
+        "Chinese-German","CHINESE-GERMAN", "Sino-German",
         "the People's Republic of China", "the PRC"),
 
     'GERMAN' : ("China","sino-deutsche", "chinesisch-deutsche",

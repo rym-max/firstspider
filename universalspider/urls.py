@@ -157,11 +157,11 @@ def URLSZERO(dt,timezone,logger,**kwargs):
     last_date = get_date_withzone(dt,timezone)
     
     oneday_delta = datetime.timedelta(1,0,0)
-
+    logger.debug("i'm here 3")
     results = []
     for li in kwargs.get("pageargs",[]):
         start_hour = li.get("start_hour",None)
-
+        logger.debug("i'm here 4")
         start_date = last_date
         if start_hour:
             if last_date.hour >= start_hour:
@@ -280,7 +280,7 @@ def URLSFOUR(dt,timezone,logger,**kwargs):
         spider  :logger
         kwargs  :
             api_li :[{
-                "api_formatter":
+                "api_formatter":[]
                 "pattern_str":{"json_formatter":"","xml_formatter":""}
             }]
 
@@ -294,20 +294,60 @@ def URLSFOUR(dt,timezone,logger,**kwargs):
     logger.debug("i'm here 3")
     results = []
     for li in kwargs.get("api_li",[]):
-        api_url = format_date(current_date,li.get("api_formatter",""))
-        if api_url:
-            status_code, res = make_request(api_url,logger,"json",None,60,
+        api_url = li.get("api_formatter",[])
+        for apuu in api_url:
+            apu = format_date(current_date,apuu)
+            status_code, res = make_request(apu,logger,"json",None,60,
                 li.get("api_code","utf8"),**li.get("pattern_str",{}))
             logger.debug("response result<<<<%s" % str(res))
             logger.debug("response status<<<<%s" % str(status_code))
+            logger.debug("至少在这")
             if status_code in [202, 200]:
-                lis = res.get(li.get("itemname","item"),[])
-                for ls in lis:
-                    item_url = ls.get(li.get("itemurl","url"),"")
-                    if item_url:
-                        results.append(item_url)
+                itemls = li.get("itemname",[])
+                a = res
+                for itl in itemls:
+                    logger.debug("last_string <<<<<%s" % str(a.keys()))
+                    a = a.get(itl,{})
+
+                if a:
+                    for ls in a:
+                        item_url = ls.get(li.get("itemurl","url"),"")
+                        if item_url:
+                            results.append(item_url)
 
     return results
+
+def URLSTEN(dt,timezone,logger,**kwargs):
+    '''get date from api
+        dt      :date
+        timezone:timezone
+        spider  :logger
+        kwargs  :
+            pageargs :[
+                {}
+            ]
+
+        description: 综合前面的
+    '''
+    funclist = [
+        "URLSZERO",
+        "URLSONE",
+        "URLSTWO",
+        "URLSTHREE",
+        "URLSFOUR"
+    ]
+    alldata = kwargs.get("pageargs",[])
+    results = []
+    for al in alldata:
+        logger.debug('[show some data]<<<< %s' % str(al))
+        func_string = funclist[al['case']] if al['case'] < len(funclist) else ""
+        logger.debug('')
+        if func_string:
+            result = eval(func_string)(dt,timezone,logger,**al['Kwargs'])
+            results.extend(result)
+
+    return results
+
 
 def get_start_urls(dt,timezone,case,logger,**kwargs):
     '''for start_urls
@@ -346,6 +386,12 @@ def get_start_urls(dt,timezone,case,logger,**kwargs):
         #from josn
         try:
             return URLSFOUR(dt,timezone,logger,**kwargs)
+        except Exception as e:
+            logger.warn(e)
+    elif case == 10:
+        #综合
+        try:
+            return URLSTEN(dt,timezone,logger,**kwargs)
         except Exception as e:
             logger.warn(e)
     else:

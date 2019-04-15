@@ -6,37 +6,39 @@
     "settings": {
         "USER_AGENT": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36",
         "ITEM_PIPELINES":{
-            "universalspider.pipelines.NewsSQLServerPipeline": 300
+            "universalspider.pipelines.NewsStandFilterPipeline": 300
          },
      "DOWNLOAD_DELAY": 1
     },
     "start_urls": {
-        "type": "dynamic",
-        "method": "fromjson",
-        "need_process": 1,
-        "args":{
-            "url":"http://news.people.com.cn",
-            "pattern":"initPagination().+url: \"(.+?)\"",
-            "group_num":2,
-            "code1":"gbk",
-            "re_mode":"re.DOTALL",
-            "formatter":"http://news.people.com.cn%s?_%d",
-            "code2":"utf-8",
-            "key1":"items",
-            "key2":"url",
-            "need_unix":1
-        }
+        "case":4,
+        "Kwargs":{
+            "api_li":[
+                {
+                    "api_formatter":["http://news.people.com.cn/210801/211150/index.js?_=%(UNIX)s"],
+                    "pattern_str":{
+                        "json_formatter":".*"
+                    },
+                    "api_code":"utf8",
+                    "itemname":"items",
+                    "itemurl":"url"
+                }
+            ]
+        },
+        "need_process":1
     },
     "allowed_domains": [
         "people.com.cn"
     ],
-    "core_words":[""],
     "language":"CHINESE",
-    "filter_all":0,
+    "timezone":8,
     "need_text":0,
-    "filter":["中德","德国"],
+    "filter_depth":3,
+    "daylimit":"1,3,6",
 
-    "table":"news",
+    "date_formatter":["%Y-%m-%d"],
+
+    "table":"data",
 
     "rules": "void",
     "item": {

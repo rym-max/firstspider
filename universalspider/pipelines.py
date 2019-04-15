@@ -14,6 +14,7 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
+import re
 import pymysql
 import pymssql
 from time import strftime
@@ -237,15 +238,22 @@ class NewsStandFilterPipeline(object):
         url = item.get('url','')
         text = item.get('text','')
         source = item.get('source','')
-        website = item.get('website','')
+        #website = item.get('website','')
         category = item.get('category', '')
         new_date = item.get('datetime', '1970-1-1 00:00:00')
         author = item.get('author','')
         keywords = item.get('keywords', '')
+        #spider.logger.debug("<<<<<<<<[item]:%s" % str(item))
 
         if self.filter:
             for ff in self.filter:
-                if ff in title or ff in text:
+                if re.search(ff,title,re.IGNORECASE) and self.filter_depth >=1:
+                    tag=True
+                    break
+                if re.search(ff,keywords,re.IGNORECASE) and self.filter_depth >=2:
+                    tag=True
+                    break
+                if re.search(ff,text,re.IGNORECASE) and self.filter_depth >=3:
                     tag=True
                     break
         else:
@@ -323,7 +331,7 @@ class NewsStandFilterPipeline(object):
         self.timezone = spider.timezone
         self.news_date_formatter = config.get('date_formatter',["%Y-%m-%d %H:%M:%S"])
         self.need_filter_date = config.get("need_filter_date",True) #日报
-
+        self.filter_depth = config.get("filter_depth",3)
 
 class NewsSQLFilterPipeline(object):
     '''filter date
@@ -333,7 +341,10 @@ class NewsSQLFilterPipeline(object):
     '''
 
     def process_item(self, item, spider):
-                
+
+        self.item_count +=1
+        tag = False
+
         title = item.get('title','')
         url = item.get('url','')
         text = item.get('text','')
@@ -342,11 +353,17 @@ class NewsSQLFilterPipeline(object):
         #website = item.get('website','')
         category = item.get('category', '')
         author = item.get('author','')
-        #keywords = item.get('keywords', '')
+        keywords = item.get('keywords', '')
         
         if self.filter:
             for ff in self.filter:
-                if ff in title or ff in text:
+                if ff in title and self.filter_depth >=1:
+                    tag=True
+                    break
+                if ff in keywords and self.filter_depth >=2:
+                    tag=True
+                    break
+                if ff in text and self.filter_depth >=3:
                     tag=True
                     break
         else:
@@ -422,3 +439,4 @@ class NewsSQLFilterPipeline(object):
         self.timezone = spider.timezone
         self.news_date_formatter = config.get('date_formatter',["%Y-%m-%d %H:%M:%S"])
         self.need_filter_date = config.get("need_filter_date",True) #日报
+        self.filter_depth = config.get("filter_depth",3)

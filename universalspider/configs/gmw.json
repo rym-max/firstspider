@@ -11,28 +11,62 @@
      "DOWNLOAD_DELAY": 1
     },
     "start_urls": {
-		"type": "dynamic",
-        "method": "frompage",
-        "args":{
-            "forma_page":[
-				["http://world.gmw.cn/node_4661.htm",[]],
-				["http://world.gmw.cn/node_4485.htm",[]],
-				["http://world.gmw.cn/node_24179.htm",[]],
-				["http://world.gmw.cn/node_4660.htm",[]],
-				["http://world.gmw.cn/node_4696.htm",[]]
+		"case": 1,
+        "Kwargs":{
+            "pageargs":[
+                {
+                    "formatter":"http://world.gmw.cn/node_4661.htm"
+                },
+                {
+                    "formatter":"http://world.gmw.cn/node_4485.htm"
+                },
+                {
+                    "formatter":"http://world.gmw.cn/node_24179.htm"
+                },
+                {
+                    "formatter":"http://world.gmw.cn/node_4660.htm"
+                },
+                {
+                    "formatter":"http://world.gmw.cn/node_4696.htm"
+                },
+                {
+                    "formatter":"http://world.gmw.cn/node_4661_%(number)s.htm",
+                    "pages":[2,0.6,10,0]
+                },
+                {
+                    "formatter":"http://world.gmw.cn/node_4485_%(number)s.htm",
+                    "pages":[2,0.033,10,0]
+                },
+                {
+                    "formatter":"http://world.gmw.cn/node_24179_%(number)s.htm",
+                    "pages":[2,0.0027,3,0]
+                },
+                {
+                    "formatter":"http://world.gmw.cn/node_4660_%(number)s.htm",
+                    "pages":[2,0.02,10,0]
+                },
+                {
+                    "formatter":"http://world.gmw.cn/node_4696_%(number)s.htm",
+                    "pages":[2,0.0012,10,0]
+                }
             ]
-        }
+        },
+        "need_process":0
     },
     "allowed_domains": [
         "gmw.cn"
     ],
+    "timezone":8,
     "core_words":["中德","德国"],
     "language":"CHINESE",
     "filter_all":0,
+    "filter_depth":3,
     "need_text":0,
-    
+    "daylimit":"4,10,16",
+    "date_formatter":["%Y-%m-%d"],
 
-    "table":"news",
+
+    "table":"data",
 
     "rules": "gmw",
     "item": {
@@ -44,8 +78,7 @@
                     "method": "xpath",
                     "args": [
                         "//title/text()"
-                    ],
-                    "re" : "(.*)"
+                    ]
                 }
             ],
             "url":[
@@ -68,7 +101,7 @@
                 {
                     "method":"xpath",
                     "args": [
-                        "//div[@id='articleBox']//p//text()"
+                        "//div[@id='articleBox']//div[@class='u-mainText']//p//text()"
                     ]
                 }
             ],

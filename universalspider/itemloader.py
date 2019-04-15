@@ -43,6 +43,7 @@ class ChinaLoader(BasicLoader):
 
 class BaikeLoader(BasicLoader):
     text_out = Compose(Join(),lambda s: s.strip())
+    title_out = Compose(Join(),lambda s: s.strip())
     url_out = Compose(Join(), BaikeShort())
 
 # class NewsLoader(BasicLoader):

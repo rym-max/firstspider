@@ -12,9 +12,9 @@
 # here put the import lib
 
 CONFIG_HOST	="localhost"
-CONFIG_DB	="test"
+CONFIG_DB	="spider_tempnews"
 CONFIG_PORT	=3306
-CONFIG_PSWD ="8512"
+CONFIG_PSWD ="lab760"
 CONFIG_TABLE="config_rules"
 CONFIG_USER	="root"
 
@@ -22,7 +22,7 @@ DATA_DB		="spider_tempnews"
 DATA_HOST	="localhost"
 DATA_PORT	=3306
 DATA_TABLE  ="news"
-DATA_PSWD	="8512"
+DATA_PSWD	="lab760"
 DATA_USER	="root"
 
 

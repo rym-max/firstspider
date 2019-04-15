@@ -230,7 +230,7 @@ def judge_date(news_date,news_date_formatter=["%Y-%m-%d %H:%M:%S"],last_date=Non
         else:
             break
     if dd:
-        if dd>last_date:
+        if dd > last_date - datetime.timedelta(0,3600*(8-timezone)):
             return dd,True
         else:
             return dd,False
@@ -278,7 +278,7 @@ session.headers = {
 }
 
 def make_request(url, logger, rtype="html", data=None, timeout=60, encode="utf8",**kwargs):
-
+    r_json = {}
     try:
         if data:
             r = session.post(url, data=data, timeout=timeout)
@@ -293,16 +293,20 @@ def make_request(url, logger, rtype="html", data=None, timeout=60, encode="utf8"
             try:
                 r_json = r.json()
             except json.JSONDecodeError as e: 
-                logger.debug("<<<<<<[%s] :\n\r <<<<<<decode error:cannot decode json directly \n\r <<<<<<%s" % (url, str(e)))
+                logger.debug("<<<<<<[%s] :\n\r <<<<<<decode error:cannot decode json directly \n\r <<<<<<%s \n\r <<<<<%s" % (url, str(e),r.text))
             else:
+                return r.status_code, r_json
+            finally:    
                 if kwargs.get("json_formatter",""):
                     pattern = kwargs.get("json_formatter","")
                     json_str = re.search(pattern,r.text,re.DOTALL).group()
+                    logger.debug("<<<<<<<results: %s" % str(json_str))
                     r_json = json.loads(json_str)
                     logger.debug("result pages:<<<< %s" % str(r_json))
                 else:
                     r_json = {}
-            return r.status_code, r_json
+                return r.status_code,r_json
+            
         elif rtype == "xml":
             return r.status_code, r.text
         elif rtype == "html":
