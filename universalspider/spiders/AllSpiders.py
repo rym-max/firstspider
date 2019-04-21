@@ -668,6 +668,7 @@ class AuswaertigesSpider(TemplatezweiSpider):
         results = []
         for url in self.start_urls:
             results.append("https://www.auswaertiges-amt.de"+url)
+        self.logger.debug(results)
         self.start_urls = results
 
 

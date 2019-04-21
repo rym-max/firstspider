@@ -317,6 +317,71 @@ def URLSFOUR(dt,timezone,logger,**kwargs):
 
     return results
 
+def URLSFIVE(dt,timezone,logger,**kwargs):
+    '''get url from a series api
+
+    dt      :date
+    timezone:timezone
+    spider  :logger
+    kwargs  :
+        api_li :[{
+            "api_forma":[
+                {
+                    "formatter":""
+                    "pages":[start,ratio,end,step,digit]
+                },
+                {
+                    "formatter":""
+                }
+            ]
+            "pattern_str"   :{"json_formatter":"","xml_formatter":""},
+            "api_code"      :
+            "itemname"      :
+            "itemurl"       :
+        }]
+    '''
+    logger.debug("i'm here 2")
+    current_date = get_date_withzone(datetime.datetime.now(),timezone)
+    last_date = get_date_withzone(dt, timezone)
+    time_delta = current_date - last_date
+    day_difference = time_delta.days + 1 #可能少个一天，按大的算
+    logger.debug("i'm here 3")
+    results = []
+    input_args = {"api_li":[]}
+    for apili in kwargs.get("api_li",[]):
+        valueitem = apili
+        page_results = []
+    
+        for li in apili.get('api_forma',[]):
+            formatter = li.get('formatter',"")
+            pages = li.get('pages',"")
+            logger.debug("i'm here 4")
+            if pages:
+                start_number = pages[0]
+                ratio = pages[1]
+                last_page = pages[2]
+                step = pages[3]
+                digits = pages[4]
+
+                logger.debug("i'm here 5")
+                page_difference = int(day_difference * ratio) + 1
+                logger.debug("i'm here 6")
+                pa_di = page_difference if page_difference < last_page - start_number +1 else last_page - start_number + 1
+                logger.debug("i'm here 7 %s----%s" % (str(start_number), str(pa_di)))
+                for i in range(start_number, start_number + pa_di, step):
+                    logger.debug("i'm here 8")
+                    page_results.append(format_number(formatter,i,digits))
+            else:
+                page_results.append(format_number(formatter,0,0))
+        
+        valueitem['api_formatter'] = page_results
+        input_args["api_li"].append(valueitem)
+    
+    results.extend(URLSFOUR(dt,timezone,logger,**input_args))
+                
+    return results
+
+
 def URLSTEN(dt,timezone,logger,**kwargs):
     '''get date from api
         dt      :date
@@ -386,6 +451,12 @@ def get_start_urls(dt,timezone,case,logger,**kwargs):
         #from josn
         try:
             return URLSFOUR(dt,timezone,logger,**kwargs)
+        except Exception as e:
+            logger.warn(e)
+    elif case == 5:
+        #a series of api
+        try:
+            return URLSFIVE(dt,timezone,logger,**kwargs)
         except Exception as e:
             logger.warn(e)
     elif case == 10:

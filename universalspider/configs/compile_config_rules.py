@@ -218,11 +218,11 @@ if __name__ == "__main__":
     # if result:
     #     print("成功结束")
     
-    result = change_configs_rules(spider_name="euunion")
+    result = change_configs_rules(spider_name="euobserver")
     if result:
         print("成功结束")
 
-    result = change_date("2018-01-01 00:00:00",spider_name="euunion")
+    result = change_date("2018-01-01 00:00:00",spider_name="euobserver")
     if result:
         print("成功结束")
 
