@@ -35,7 +35,7 @@
     "need_text":0,
     "filter_depth":3,
     "daylimit":"1,3,6",
-
+    "NEED_BLOOM":1,
     "date_formatter":["%Y-%m-%d"],
 
     "table":"data",

@@ -15,6 +15,9 @@
 # https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
 from scrapy import signals
+from .errors import PathNotFoundException
+from scrapy.exceptions import IgnoreRequest
+import os
 
 
 class UniversalspiderSpiderMiddleware(object):
@@ -110,3 +113,45 @@ class UniversalspiderDownloaderMiddleware(object):
 
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
+
+class BloomFilterMiddlewares(object):
+
+    @classmethod
+    def from_crawler(cls,crawler):
+        # This method is used by Scrapy to create your spiders.
+        s = cls()
+        crawler.signals.connect(s.spider_opened, signal=signals.spider_opened)
+        return s
+        
+    def spider_opened(self, spider):
+        spider.logger.info('Spider opened: %s' % spider.name)
+
+    def process_request(self,request,spider):
+        configs = spider._config
+        need_bloom_config = configs.get("NEED_BLOOM", False)
+        need_bloom_url = request.meta.get("NEED_BLOOM",True)
+
+        if need_bloom_config and need_bloom_url:
+            sbf = spider.bloomfilter
+            if sbf != None:
+                url = request.url
+                if sbf.check(url):
+                    spider.logger.debug("<<<<<<<<[debug]:url already crawled:\n%s" % url)
+                    raise IgnoreRequest
+
+        return None
+    
+    def process_response(self,request,response,spider):
+        configs = spider._config
+        need_bloom_config = configs.get("NEED_BLOOM", False)
+        need_bloom_url = request.meta.get("NEED_BLOOM",True)
+
+        if need_bloom_config and need_bloom_url:
+            sbf = spider.bloomfilter
+            if sbf != None:
+                url = request.url
+                sbf.add_in_sbf(url)
+        
+        return response
+        
+        

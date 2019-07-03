@@ -16,6 +16,9 @@ from collections import defaultdict
 from csv import reader
 from os.path import dirname, realpath
 
+import os
+import pickle
+
 #from .configs.configs import configs
 import pymysql
 from scrapy.linkextractors import LinkExtractor
@@ -24,7 +27,8 @@ from scrapy.spiders import Rule
 import pymssql
 from .config_INFO import (CONFIG_DB, CONFIG_HOST, CONFIG_PORT, CONFIG_PSWD,
                          CONFIG_TABLE, CONFIG_USER)
-
+from .errors import PathNotFoundException
+from .filters.bloomfilter import Bloomfilter
 import logging
 
 default_logger = logging.getLogger('UTILS_DEFAULT_LOGGER')
@@ -317,3 +321,124 @@ def make_request(url, logger, rtype="html", data=None, timeout=60, encode="utf8"
 
 def json_dumps(obj):
     return json.dumps(obj, ensure_ascii=False, indent=4, sort_keys=True)
+
+"""
+BloomFilter 相关
+"""
+
+def get_bloom(prepath,spider_name,last_date,logger,*args,**kwargs):
+    #先判断prepath是否存在
+    if not prepath:
+        logger.error("<<<<<<[error]:BloomFilter文件夹未设置 -----")
+        raise PathNotFoundException(path=prepath)
+    else:
+        #文件夹是否能访问
+        if not os.path.isdir(prepath):
+            try:
+                os.mkdir(prepath)
+            except:
+                logger.error("<<<<<<[error]:无法创建BloomFilter文件夹 -----"+prepath)
+                raise PathNotFoundException(path=prepath)
+    #判断spider_name文件夹是否存在
+    spider_path = prepath+'/'+spider_name
+    if not os.path.isdir(spider_path):
+        try:
+            os.mkdir(prepath)
+        except:
+            logger.error("<<<<<<[error]:无法创建对应spider的BloomFilter文件夹 -----"+spider_path)
+            raise PathNotFoundException(path=spider_path)
+    
+    #遍历当前文件夹下文件
+    dir_li = os.listdir(spider_path)
+    latest_Date = None
+    target_file = None
+    if dir_li:
+        pic_li = []
+        
+        for fname in dir_li:
+            fn_li = fname.split(".")
+            if fn_li[-1]=='pickle':#后缀名为pickle
+                p_date_str_li = fn_li[0].split("_")
+                try:
+                    #转化为时间
+                    p_date = datetime.datetime.strptime(p_date_str_li[-1],"%Y-%m-%d %H:%M:%S")
+                    latest_Date = p_date if (latest_Date == None or latest_Date < p_date) else latest_Date
+                    target_file= fname if (target_file == None or latest_Date == p_date) else target_file
+                except Exception as e:
+                    logger.info("<<<<<<<<<<<<<<<<<<<<<pickle文件名错误")
+        
+        #判断时间是否超过，默认时间为24月*30=720天，鬼知道以后还用不用
+        time_duration = kwargs.get("",720)
+        days_delta = datetime.timedelta(time_duration,0,0)
+        if datetime.datetime.now()-latest_Date < days_delta:
+            #读取pickle，并设置logger
+            read_sbf=Bloomfilter()
+            f = open(spider_path+'/'+target_file,'wb')
+            pickle.load(read_sbf,f)
+            read_sbf.setlogger(logger)
+
+            sbf_filename = target_file
+            f.close()
+            return read_sbf, sbf_filename
+        
+    #是否需要删除
+    if target_file:
+        need_delete = kwargs.get("NEED_DELETE_BLOOM",False)
+        if need_delete:
+            reason = "Latest BloomFilter Need to be Deleted"
+            delete_file(spider_path+'/'+target_file, logger=logger, reason=reason)
+            
+        
+    #else:
+        #文件夹下为空，直接创建一个新的bloomfilter
+    #超过特定时间长度，决定重新创建
+    new_sbf = Bloomfilter(logger)
+    return new_sbf, None
+
+def set_bloom(bloomF,bloompath=None,bloomname=None,logger=default_logger,create_Date=False,*args,**kwargs):
+    """
+    params:不解释
+    desc:pickle文件日期格式
+    spidername_YYYY-mm-dd HH:MM:SS.pickle
+    """
+    if not isinstance(bloomF, Bloomfilter):
+        logger.error("<<<<<<<<<<<<<<<[error]:传入了错误格式的bloomfilter")
+        raise ValueError
+    if bloompath == None:
+        logger.error("<<<<<<<<<<<<<<<[error]:bloomfilter根目录路径为空")
+        raise ValueError
+    filename = None
+
+
+    #判断bloomname格式
+    if bloomname==None:
+        create_Date = True
+
+    if not create_Date:
+        if bloomname != None:
+            re_pattern  = r"_\d+-\d+-\d+ \d+:\d+:\d+\.pickle"
+            if re.search(re_pattern, bloompath):
+                filename = bloomname
+            else:
+                logger.warn("<<<<<<<[warning]:文件格式错误")
+    
+    if filename == None:
+        now_time = datetime.datetime.now()
+        filename = now_time.strftime("TEMPORY_%Y-%m-%d %H:%M:%S.pickle")
+    try:
+        f = open(filename,'wb')
+        pickle.dump(bloomF,f)
+        f.close()
+    except Exception as e:
+        logger.error("<<<<<<<<<[error]存储bloomfilter错误,%s" % str(e))
+    else:
+        logger.info("<<<<<<<<<[info]成功存储bloomfilter")
+
+
+def delete_file(filepath,logger=default_logger,reason='Delete'):
+    try:
+        os.remove(filepath)
+    except Exception as e:
+        logger.error("Failed to Delete File'" + filepath + "', [Error]:" + str(e))
+    else:
+        logger.info("Successfully Delete File '" + filepath + "', [Reason]:"+ reason)

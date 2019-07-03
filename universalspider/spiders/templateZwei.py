@@ -4,9 +4,14 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from ..rules import rules
 from ..utils import get_configs, get_rules, get_dates, set_dates
+from ..utils import get_bloom, set_bloom
 from ..itemloader import *
 from ..items import *
 from ..urls import get_start_urls
+from ..errors import PathNotFoundException
+
+import os
+
 
 class TemplatezweiSpider(CrawlSpider):
     
@@ -40,6 +45,12 @@ class TemplatezweiSpider(CrawlSpider):
         # 获取上次爬取日期
         self.last_date = get_dates(self._name, self.logger) 
         
+        # 获取本爬虫的bloomfilter
+        self.bloomfilter = None
+        if config.get("NEED_BLOOM",False):
+            self.bloom_path = self.settings.get("BLOOM_PATH",None)
+            self.bloomfilter,self.bloomname = get_bloom(self.bloom_path,self.name,self.last_date,self.logger)
+
         # 获取rules, allowed_domains, start_urls
         self.rules = get_rules(self._name, self.logger) #建议rules 通用化
         
@@ -63,6 +74,12 @@ class TemplatezweiSpider(CrawlSpider):
         # for _compile_rules
         super(TemplatezweiSpider, self).__init__(*args,**kwargs)
         self.logger.debug("rules<<<<<:%s" % str(self.rules))
+
+    def closed(self,reason):
+
+        set_bloom(self.bloomfilter,self.bloom_path,self.bloomname,self.logger)
+        self.logger.info("successfully stored bloomfilter")
+        self.logger.info("spider closed.[reason]:%s" % reason)
 
 
     def parse_start_url(self,response):
@@ -101,3 +118,13 @@ class TemplatezweiSpider(CrawlSpider):
                     if extractor.get('method') == 'func':
                         loader.add_value(key, *eval('urls.' + str(extractor.get('args')[0]))(**extractor.get('kwargs',{})),**{'re': extractor.get('re')})
             yield loader.load_item()
+
+
+    def add_bloom_to_request(self,request):
+        '''add tag in request
+
+        for middleware to check this request need to be filter by bloom
+        '''
+        request.meta.setdefault("NEED_BLOOM",False)
+        return request
+    
