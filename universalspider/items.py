@@ -33,6 +33,7 @@ class NewsItem(scrapy.Item):
     category = scrapy.Field()
     author = scrapy.Field()
     keywords = scrapy.Field()
+    dcdescription = scrapy.Field()
 
     
 class BaikeItem(scrapy.Item):

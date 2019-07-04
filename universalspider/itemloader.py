@@ -13,6 +13,7 @@ from scrapy.loader import ItemLoader
 from scrapy.loader.processors import TakeFirst, Join, Compose
 import re
 
+
 class BaikeShort(object):
     '''
 
@@ -64,12 +65,18 @@ class NewsLoader(BasicLoader):
 
     source_out = Compose(Join(), lambda s: s.strip())
 
-    def add_re(self,field_name, re_form, *processors, **kw):
-        values = self._get_revalues(re_form, **kw)
-        return self.add_value(field_name, values, *processors, **kw)
-    
-    def _get_revalues(self, re_form, **kw):
-        pattern = re.compile(re_form ,re.DOTALL)
-        if self.context.get('response',None):
-            response = self.context.get('response')
-            return pattern.search(response, re.DOTALL).group()
+
+    #貌似不需要
+    # def add_html(self, field_name, xpath, *processors, **kw):
+    #     '''must use xpath to extract
+
+    #     '''
+    #     values = self._get_htmlvalues(xpath, **kw):
+    #     self.add_value(field_name, values, *processors, **kw)
+
+    # def _get_htmlvalues(self,xpaths, **kw):
+    #     self._check_selector_method()
+    #     xpaths = arg_to_iter(xpaths)
+    #     '''重写selector太麻烦在这定义吧'''
+    #     return None
+            

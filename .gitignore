@@ -1,0 +1,5 @@
+*.json
+/universalspider/__pycache__
+/universalspider/configs/__pycache__
+/universalspider/spiders/__pycache__
+/universalspider/config_INFO.py

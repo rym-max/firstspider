@@ -122,7 +122,7 @@ class BloomFilterMiddlewares(object):
         s = cls()
         crawler.signals.connect(s.spider_opened, signal=signals.spider_opened)
         return s
-        
+
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
 
@@ -130,7 +130,12 @@ class BloomFilterMiddlewares(object):
         configs = spider._config
         need_bloom_config = configs.get("NEED_BLOOM", False)
         need_bloom_url = request.meta.get("NEED_BLOOM",True)
-
+        need_bloom_start_url = configs.get("start_url_need_bloom",False)
+        
+        url = request.url
+        if url in spider.start_urls and not need_bloom_start_url:
+            return None
+        
         if need_bloom_config and need_bloom_url:
             sbf = spider.bloomfilter
             if sbf != None:
@@ -145,6 +150,11 @@ class BloomFilterMiddlewares(object):
         configs = spider._config
         need_bloom_config = configs.get("NEED_BLOOM", False)
         need_bloom_url = request.meta.get("NEED_BLOOM",True)
+        need_bloom_start_url = configs.get("start_url_need_bloom",False)
+        
+        url = request.url
+        if url in spider.start_urls and not need_bloom_start_url:
+            return response
 
         if need_bloom_config and need_bloom_url:
             sbf = spider.bloomfilter
