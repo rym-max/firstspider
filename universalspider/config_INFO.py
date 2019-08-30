@@ -30,3 +30,22 @@ SQL_DB		="none"
 SQL_HOST	=None
 SQL_PSWD	=None
 SQL_USER	=None
+#-----version 3-----------
+CONFIG_HOST	="localhost"
+CONFIG_DB	="Vip_Tongji"
+CONFIG_PORT	=1433
+CONFIG_PSWD ="gespider"
+CONFIG_TABLE=""
+CONFIG_USER	="spider_account"
+
+DATA_DB		="Vip_Tongji"
+DATA_HOST	="localhost"
+DATA_PORT	=1433
+DATA_TABLE  ="ERMS_All"
+DATA_PSWD	="gespdier"
+DATA_USER	="spider_account"
+
+
+SPIDER_CONFIG_TABLE ="SPIDER_Config"
+SPIDER_ITEM_TABLE   ="SPIDER_Item"
+SPIDER_LOG_TABLE ="Log_SpiderLog"

@@ -17,6 +17,5 @@ corewords = {
         "Chinese-German","CHINESE-GERMAN", "Sino-German",
         "the People's Republic of China", "the PRC"),
 
-    'GERMAN' : ("China","sino-deutsche", "chinesisch-deutsche",
-        "deutsch-sino")
+    'GERMAN' : ("hongkong")
 }

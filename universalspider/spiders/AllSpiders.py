@@ -222,9 +222,12 @@ class EuobserverSpider(TemplatezweiSpider):
      
     name = "euobserver"
     custom_settings = {
-        "USER_AGENT": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36",
-        "ITEM_PIPELINES":{
+        "USER_AGENT": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:64.0) Gecko/20100101 Firefox/64.0",
+		"ITEM_PIPELINES":{
             "universalspider.pipelines.NewsStandFilterPipeline": 300
+        },
+        "DOWNLOADER_MIDDLEWARES" : {
+            "universalspider.middlewares.BloomFilterMiddlewares": 543
         },
         "DOWNLOAD_DELAY": 1
     }

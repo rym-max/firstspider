@@ -10,7 +10,7 @@
 '''
 
 from scrapy.loader import ItemLoader
-from scrapy.loader.processors import TakeFirst, Join, Compose
+from scrapy.loader.processors import TakeFirst, Join, Compose,Identity
 import re
 
 
@@ -79,4 +79,18 @@ class NewsLoader(BasicLoader):
     #     xpaths = arg_to_iter(xpaths)
     #     '''重写selector太麻烦在这定义吧'''
     #     return None
-            
+
+#-----------------version 3
+class NewsLoaderV3(BasicLoader):
+
+    #title default
+    #dateissued default
+    subject_out = Identity()
+    text_out = Compose(Join(), lambda s: s.strip(),
+        lambda s: s.replace("\u3000\u3000",""),
+        lambda s: s.replace("\xa0",""),
+        lambda s: s.replace(r"\r\n","<br>"))
+    #description default
+    source_out = Compose(Join(), lambda s: s.strip())
+    author_out = Identity()
+    #url default

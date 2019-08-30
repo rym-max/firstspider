@@ -2,6 +2,8 @@
 import scrapy
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
+from scrapy.conf import settings
+
 from ..rules import rules
 from ..utils import get_configs, get_rules, get_dates, set_dates
 from ..utils import get_bloom, set_bloom
@@ -15,7 +17,8 @@ import os
 
 class TemplatezweiSpider(CrawlSpider):
     
-    """mainly for debug the rules of crawler
+    """ version 2.0
+    mainly for debug the rules of crawler
     
     Attributes:
         name: template's name, not change
@@ -48,7 +51,7 @@ class TemplatezweiSpider(CrawlSpider):
         # 获取本爬虫的bloomfilter
         self.bloomfilter = None
         if config.get("NEED_BLOOM",False):
-            self.bloom_path = self.settings.get("BLOOM_PATH",None)
+            self.bloom_path = settings.get("BLOOM_PATH",None)
             self.bloomfilter,self.bloomname = get_bloom(self.bloom_path,self.name,self.last_date,self.logger)
 
         # 获取rules, allowed_domains, start_urls
@@ -77,8 +80,7 @@ class TemplatezweiSpider(CrawlSpider):
 
     def closed(self,reason):
 
-        set_bloom(self.bloomfilter,self.bloom_path,self.bloomname,self.logger)
-        self.logger.info("successfully stored bloomfilter")
+        set_bloom(self.bloomfilter,self.bloom_path+'/'+self.name,self.bloomname,self.logger)
         self.logger.info("spider closed.[reason]:%s" % reason)
 
 

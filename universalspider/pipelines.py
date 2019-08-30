@@ -243,6 +243,7 @@ class NewsStandFilterPipeline(object):
         new_date = item.get('datetime', '1970-1-1 00:00:00')
         author = item.get('author','')
         keywords = item.get('keywords', '')
+        dcdescription = item.get('dcdescription',text)
         #spider.logger.debug("<<<<<<<<[item]:%s" % str(item))
 
         if self.filter:
@@ -263,8 +264,8 @@ class NewsStandFilterPipeline(object):
 
         if tag and (tag_date or not self.need_filter_date):
             self.related_count +=1
-            sql = "INSERT INTO "+self.table+" (`title`,`date`,`description`,`source`,`creator`,`subject`,`url`,`attach`,`CategoryId`) "+ \
-                "VALUES (%(title)s,%(date)s,%(description)s,%(source)s,%(creator)s,%(subject)s,%(url)s,%(attach)s,%(CategoryId)s)"
+            sql = "INSERT INTO "+self.table+" (`title`,`date`,`description`,`source`,`creator`,`subject`,`url`,`attach`,`CategoryId`,`dcdescription`) "+ \
+                "VALUES (%(title)s,%(date)s,%(description)s,%(source)s,%(creator)s,%(subject)s,%(url)s,%(attach)s,%(CategoryId)s,%(dcdescription)s)"
 
             value_item = {
                 "title" : title,
@@ -272,10 +273,11 @@ class NewsStandFilterPipeline(object):
                 "description" : text,
                 "date" : news_date.strftime("%Y-%m-%d"),
                 "source" : source,
-                "subject" : category,
+                "subject" : keywords,
                 "creator" : author,
                 "attach" :"",
-                "CategoryId":1
+                "CategoryId":1,
+                "dcdescription":dcdescription
             }
             try:
                 self.cur.execute(sql,value_item)
@@ -440,3 +442,165 @@ class NewsSQLFilterPipeline(object):
         self.news_date_formatter = config.get('date_formatter',["%Y-%m-%d %H:%M:%S"])
         self.need_filter_date = config.get("need_filter_date",True) #日报
         self.filter_depth = config.get("filter_depth",3)
+
+#------------version 3---------------
+import logging
+import json
+
+from .utils import isContain,isGerman
+from .utils import get_now_date,dict_XML
+from .utils import set_stop_action
+
+class NewsMetaPipeline(object):
+
+    def process_item(self,item):
+        '''process item with different validation & prepare item & log details 
+        validation as follows:
+        1.filter is necessary
+        2.date is well
+        prepare as follows:
+        1.meta value
+        2.db item
+        '''
+        self.item_count += 1
+        #if need store
+        tag=False
+
+        title = item.get('title','')
+        dateissued = item.get('dateissued','1970-01-01 00:00:00')
+        subject = item.get('subject',[])
+        text = item.get('text','')
+        description= item.get('description','')
+        source = item.get('source','')
+        author = item.get('author',[])
+        url = item.get('url','')
+
+        #validation 1
+        tag = isContain(text,self.filter)
+        #validation 2
+        news_date, tag_date = judge_date(dateissued,self.news_date_formatter,self.last_date, self.timezone)
+
+
+        if tag and (tag_date or not self.need_filter_date):
+            sql_string = "INSERT INTO " + self.table + \
+                " (ChannelId,CategoryId,MetadataValue,IsGermany,Sort,Click,Status,IsSolr,CreateTime,ModifyTime) "+\
+                " VALUES "+\
+                " (%(channel)s,%(category)s,%(metadata)s,%(isGermany)s,0,0,0,1,%(create)s,%(create)s)"
+            #prepare 1
+            metavalue ={
+                "dc.title":title,
+                "dc.date.issued":news_date.strftime("%Y-%m-%d"),
+                "dc.subject":description,
+                "dc.description":description,
+                "dc.source":source,
+                "dc.author":author,
+                "dc.url":url,
+                "dc.language":self.language
+            }
+            #prepare 2
+            value_item = {
+                "channel":self.channel,
+                "category":self.category,
+                "metadata":dict_XML(metavalue,field_name ="field"),
+                "isGermany":self.isGerman or isGerman(text,self.language),
+                "create":get_now_date()
+            }
+
+            try:
+                self.cur.execute(sql_string,value_item)
+                self.cnx.commit()
+                self.related_count +=1
+            except Exception as e:
+                print(e)
+
+        if not self.last_time:
+            self.last_time = time.time()
+            self.logger.info("Crawled %d pages (at %d pages/min), scraped %d items (at %d items/min)" %(
+                    int(self.item_count),int(self.item_count-self.last_item),int(self.related_count),int(self.related_count-self.last_related)
+            ))
+            self.last_related = self.related_count
+            self.last_item = self.item_count
+        else:
+            if time.time()-self.last_time > 60.0:
+                
+                self.logger.info("Crawled %d pages (at %d pages/min), scraped %d items (at %d items/min)" %(
+                    int(self.item_count),int(self.item_count-self.last_item),int(self.related_count),int(self.related_count-self.last_related)
+                ))
+                self.last_related = self.related_count
+                self.last_item = self.item_count
+                self.last_time = time.time()    
+
+    def open_spider(self,spider):
+        '''init pipeline version 3
+        init params
+        params list as followw
+        1.db config
+        2.db connect
+        3.isGerman
+        4.language & filter & filter params
+        5.logger & log result
+        6.date judge params
+        7.ERMS detail
+        '''
+        #param 1
+        config = spider._config
+
+        #param 2
+        # self.db = config.get("db","Vip_TongJi") banned
+        self.spider_name = config.get("spider_name",spider._name)
+        self.table = config.get("table","ERMS_All")#data
+
+        self.cnx = pymssql.connect(host=DATA_HOST,user=DATA_USER,password=DATA_PSWD,database=DATA_DB)
+        self.cur = self.cnx.cursor()
+
+        #param 3
+        self.isGerman = False
+
+        #param 4
+        self.language = config.get("language",None)
+        if self.language:
+            self.filter = corewords.corewords[self.language]
+            if self.language == "GERMAN":
+                self.isGerman = True
+        else:
+            self.filter = []
+        self.filter_depth = config.get("filter_depth",3)
+
+        #param 5
+        self.logger = logging.getLogger(self.spider_name+".NewsMetaPipeline")
+        self.item_count = 0
+        self.last_item = 0
+        self.related_count = 0
+        self.last_related = 0
+        self.last_time = None
+
+        #param 6
+        self.last_date = spider.last_crawl_date
+        self.timezone = spider.timezone
+        self.news_date_formatter = config.get('date_formatter',["%Y-%m-%d %H:%M:%S"])
+        
+        self.need_filter_date = config.get("need_filter_date",True) or \
+            spider.bloompath == None
+        #param 7
+        self.channel = config.get("channel",1)
+        self.category = config.get("category",1)
+
+    def close_spider(self,spider):
+        '''when spider stop 
+        '''
+        self.logger.info("prepare to stop pipeline ---" + "NewsMetaPipeline")
+        
+        #先不管中断问题
+        result_item ={
+            "success":1,
+            "reason":"Crawl finished",
+            "result":{
+                "crawl_page":self.item_count,
+                "crawl_item":self.related_count
+            }
+        }
+
+        result_str = json.dumps(result_item)
+        
+        set_stop_action(spider._name,self.logger,user=spider.user,ip=spider.ip,result=result_str)
+        

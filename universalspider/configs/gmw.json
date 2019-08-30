@@ -1,6 +1,10 @@
 {
-    "spider": "templateEin",
+    "spider": "gmw",
     "website": "光明网",
+    "WEBSITE": "GMW",
+    "channel":1,
+    "category":1,
+    "CategoryID":1,
     "type": "新闻",
     "index": "http://www.gmw.cn",
     "settings": {
@@ -65,13 +69,16 @@
     "daylimit":"4,10,16",
     "date_formatter":["%Y-%m-%d"],
 
-
-    "table":"data",
-
     "rules": "gmw",
+
+    "NEED_BLOOM":1,
+    "NEED_FILTER_DATE":0,
+
+    "table":"ERMS_All",
+
     "item": {
-        "class": "NewsItem",
-        "loader": "NewsLoader",
+        "class": "NewsItemV3",
+        "loader": "NewsLoaderV3",
         "attrs": {
             "title":[
                 {
@@ -81,15 +88,15 @@
                     ]
                 }
             ],
-            "url":[
+            "dateissued":[
                 {
-                    "method": "attr",
-                    "args": [
-                        "url"
+                    "method": "xpath",
+                    "args":[
+                        "//meta[@name='publishdate']/@content"
                     ]
                 }
             ],
-            "keywords":[
+            "subject":[
                 {
                     "method": "xpath",
                     "args":[
@@ -105,11 +112,11 @@
                     ]
                 }
             ],
-            "datetime":[
+            "description":[
                 {
-                    "method": "xpath",
-                    "args":[
-                        "//meta[@name='publishdate']/@content"
+                    "method":"xpath",
+                    "args": [
+                        "//div[@id='articleBox']"
                     ]
                 }
             ],
@@ -129,11 +136,11 @@
                     ]
                 }
             ],
-            "category":[
+            "url":[
                 {
-                    "method" : "xpath",
-                    "args" : [
-                        "//div[@class='m-crumbs']/a[last()]/text()"
+                    "method": "attr",
+                    "args": [
+                        "url"
                     ]
                 }
             ]

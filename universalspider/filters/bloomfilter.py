@@ -15,8 +15,6 @@ from pybloom_live import ScalableBloomFilter
 import hashlib
 import logging
 
-logger = logging.getLogger(__name__)
-
 class Bloomfilter(object):
 
     logger = None
@@ -25,9 +23,12 @@ class Bloomfilter(object):
         self.logger = logger
         self.sbf = ScalableBloomFilter(mode=ScalableBloomFilter.SMALL_SET_GROWTH, error_rate=1e-6)
     
-    def setlogger(self,logger=logger):
+    def setlogger(self,spidername=""):
         #防止读取时logger指向原logger而不存在
-        self.logger = logger
+        self.logger = logging.getLogger(spidername+".bloomfilter")
+    
+    def clearlogger(self):
+        self.logger = None
 
     def md5(self, url):
         md5 = hashlib.md5()

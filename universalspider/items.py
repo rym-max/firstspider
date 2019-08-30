@@ -41,3 +41,16 @@ class BaikeItem(scrapy.Item):
     name = scrapy.Field()
     url = scrapy.Field()
     text = scrapy.Field()
+
+#-------version 3--------
+class NewsItemV3(scrapy.Item):
+
+    title = scrapy.Field()
+    dateissued = scrapy.Field()
+    subject = scrapy.Field()
+    text = scrapy.Field()
+    description= scrapy.Field()
+    source = scrapy.Field()
+    author = scrapy.Field()
+    url = scrapy.Field()
+    

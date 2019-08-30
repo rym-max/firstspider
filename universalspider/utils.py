@@ -18,7 +18,7 @@ from os.path import dirname, realpath
 
 import os
 import pickle
-
+import time
 #from .configs.configs import configs
 import pymysql
 from scrapy.linkextractors import LinkExtractor
@@ -26,7 +26,8 @@ from scrapy.spiders import Rule
 
 import pymssql
 from .config_INFO import (CONFIG_DB, CONFIG_HOST, CONFIG_PORT, CONFIG_PSWD,
-                         CONFIG_TABLE, CONFIG_USER)
+    CONFIG_TABLE, CONFIG_USER,SPIDER_ITEM_TABLE,SPIDER_CONFIG_TABLE,
+    SPIDER_LOG_TABLE)
 from .errors import PathNotFoundException
 from .filters.bloomfilter import Bloomfilter
 import logging
@@ -343,7 +344,7 @@ def get_bloom(prepath,spider_name,last_date,logger,*args,**kwargs):
     spider_path = prepath+'/'+spider_name
     if not os.path.isdir(spider_path):
         try:
-            os.mkdir(prepath)
+            os.mkdir(spider_path)
         except:
             logger.error("<<<<<<[error]:无法创建对应spider的BloomFilter文件夹 -----"+spider_path)
             raise PathNotFoundException(path=spider_path)
@@ -352,29 +353,32 @@ def get_bloom(prepath,spider_name,last_date,logger,*args,**kwargs):
     dir_li = os.listdir(spider_path)
     latest_Date = None
     target_file = None
+    logger.error("要命<<<<<<<<<<<<<<<"+str(dir_li))
     if dir_li:
-        pic_li = []
+       
         
         for fname in dir_li:
             fn_li = fname.split(".")
-            if fn_li[-1]=='pickle':#后缀名为pickle
+            logger.error("要命<<<<<<<<<<<<<<<"+str(fn_li))
+            if fn_li[-1]=='pkl':#后缀名为pkl
                 p_date_str_li = fn_li[0].split("_")
                 try:
                     #转化为时间
-                    p_date = datetime.datetime.strptime(p_date_str_li[-1],"%Y-%m-%d %H:%M:%S")
-                    latest_Date = p_date if (latest_Date == None or latest_Date < p_date) else latest_Date
-                    target_file= fname if (target_file == None or latest_Date == p_date) else target_file
-                except Exception as e:
+                    p_date = datetime.datetime.strptime(p_date_str_li[-1],"%Y-%m-%d %H-%M-%S")
+                    if p_date!=None:
+                        latest_Date = p_date if (latest_Date == None or latest_Date < p_date) else latest_Date
+                        target_file= fname if (latest_Date == p_date) else target_file
+                except:
                     logger.info("<<<<<<<<<<<<<<<<<<<<<pickle文件名错误")
         
         #判断时间是否超过，默认时间为24月*30=720天，鬼知道以后还用不用
         time_duration = kwargs.get("",720)
         days_delta = datetime.timedelta(time_duration,0,0)
-        if datetime.datetime.now()-latest_Date < days_delta:
+        if latest_Date and datetime.datetime.now()-latest_Date < days_delta:
             #读取pickle，并设置logger
-            read_sbf=Bloomfilter()
-            f = open(spider_path+'/'+target_file,'wb')
-            pickle.load(read_sbf,f)
+            #read_sbf=Bloomfilter()
+            f = open(spider_path+'/'+target_file,'rb')
+            read_sbf = pickle.load(f)
             read_sbf.setlogger(logger)
 
             sbf_filename = target_file
@@ -416,7 +420,7 @@ def set_bloom(bloomF,bloompath=None,bloomname=None,logger=default_logger,create_
 
     if not create_Date:
         if bloomname != None:
-            re_pattern  = r"_\d+-\d+-\d+ \d+:\d+:\d+\.pickle"
+            re_pattern  = r"_\d+-\d+-\d+ \d+:\d+:\d+\.pkl"
             if re.search(re_pattern, bloompath):
                 filename = bloomname
             else:
@@ -424,9 +428,10 @@ def set_bloom(bloomF,bloompath=None,bloomname=None,logger=default_logger,create_
     
     if filename == None:
         now_time = datetime.datetime.now()
-        filename = now_time.strftime("TEMPORY_%Y-%m-%d %H:%M:%S.pickle")
+        filename = now_time.strftime("TEMPORY_%Y-%m-%d %H-%M-%S.pkl")
     try:
-        f = open(filename,'wb')
+        f = open(bloompath +'/'+ filename,'wb')
+        bloomF.setlogger(None)
         pickle.dump(bloomF,f)
         f.close()
     except Exception as e:
@@ -442,3 +447,380 @@ def delete_file(filepath,logger=default_logger,reason='Delete'):
         logger.error("Failed to Delete File'" + filepath + "', [Error]:" + str(e))
     else:
         logger.info("Successfully Delete File '" + filepath + "', [Reason]:"+ reason)
+
+#-------------------------version 3--------
+def get_spider_config(name,logger=default_logger):
+    '''get configs from sql server table
+    '''
+    #pymssql
+    try:
+        cnx = pymssql.connect(host=CONFIG_HOST,user=CONFIG_USER,
+            password=CONFIG_PSWD, db=CONFIG_DB)
+        cur = cnx.cursor()
+    except Exception as e:
+        logger.error("<<<[connection error V3 in get config]:%s"%str(e))
+        return {}
+
+    sql_string = r"SELECT Configs FROM " + SPIDER_CONFIG_TABLE +" WHERE name=%(name)"
+    item = {
+        "name":name
+    }
+
+    try:
+        cur.execute(sql_string,item)
+        result = cur.fetchone()[0]
+    except Exception as e:
+        logger.error("<<<[query error V3 in get config]:%s"%str(e))
+        return {}
+    else:
+        if result:
+            config = json.loads(result)
+            cnx.close()
+            return config
+        else:
+            cnx.close()
+            return {}
+
+def get_spider_rule(name,logger=default_logger):
+    '''get rules from sqlserver database
+
+        rule={
+            "item":[
+                {
+                    "linkextra":{
+                        "allow":
+                        "deny":
+                        "restrict_xpath":
+                        "restrict_css":
+                    },
+                    "follow":
+                    "callback":
+                }
+            ]
+        }
+    '''
+    #pymssql
+    try:
+        cnx = pymssql.connect(host=CONFIG_HOST,user=CONFIG_USER,
+            password=CONFIG_PSWD, db=CONFIG_DB)
+        cur = cnx.cursor()
+    except Exception as e:
+        logger.error("<<<[connection error V3 in get RULE]:%s"%str(e))
+        return {}
+    
+    sql_string = r"SELECT Rules FROM "+ SPIDER_CONFIG_TABLE + " WHERE name=%(name)s"
+    item = {
+        "name":name
+    }
+
+    try:
+        cur.execute(sql_string,item)
+        result = cur.fetchone[0]
+    except Exception as e:
+        logger.warn("<<<<[query error V3 in get RULE]:%s" % str(e))
+        return ()
+    else:
+        if result:
+            rules = json.loads(result)
+            rrs = []
+            for r in rules.get("item",()):
+                l = r["linkextra"]
+                allow = l["allow"] if l["allow"] else ()
+                deny = l["deny"] if l["deny"] else ()
+                res_xp = l["restrict_xpath"] if l["restrict_xpath"] else ()
+                res_cs = l["restrict_css"] if l["restrict_css"] else ()
+                follow = r["follow"] if r["follow"] else None
+                callback = r["callback"] if r["callback"] else None
+                newR = Rule(LinkExtractor(allow=allow, deny=deny, 
+                    restrict_xpaths=res_xp, restrict_css=res_cs), 
+                    callback=callback, follow=follow)
+                rrs.append(newR)
+            cnx.close()
+            return rrs
+        else:
+            cnx.close()
+            return () 
+
+
+def get_last_crawl_date(name,logger=default_logger):
+    '''get last crawl date & status from sql server table
+
+        status: 0:finished;2:suspending;3:runnning;5:error;
+
+    return:
+        success: boolean
+        last_crawl_date : datetime.datetime/None
+    '''
+    #pymssql
+    try:
+        cnx = pymssql.connect(host=CONFIG_HOST,user=CONFIG_USER,
+            password=CONFIG_PSWD, db=CONFIG_DB)
+        cur = cnx.cursor()
+    except Exception as e:
+        logger.error("<<<[connection error V3 in get RULE]:%s" % str(e))
+        return False,None
+
+    sql_string = r"SELECT LastCrawlDate,Status FROM " +SPIDER_ITEM_TABLE + " WHERE name=%(name)s"
+    item = {
+        "name":name
+    }
+    #循环以保证从suspending 状态启动,多次循环不成功放弃
+    
+    try:
+        for _ in range(10):
+            cur.execute(sql_string,item)
+            result = cur.fetchone()
+            if True:#debug
+                break
+            if not result and result[1] == 3:
+                break
+            time.sleep(5)
+    except Exception as e:
+        logger.error("<<<[query error V3 in get crawl date]:%s" % str(e))
+        cnx.close()
+        return False,None
+    else:
+        cnx.close()
+        if result[0]:
+            logger.info("<<<[query success V3 in get crawl date]:last one")
+            return True, result[0]
+        else:
+            logger.info("<<<[query success V3 in get crawl date]:new one")
+            return True, datetime.datetime.now()
+    
+
+def set_last_crawl_date(name,logger=default_logger):
+    '''set last crawl date in sql server
+    
+    return:
+    success: bool
+    '''
+    #pymssql
+    try:
+        cnx = pymssql.connect(host=CONFIG_HOST,user=CONFIG_USER,
+            password=CONFIG_PSWD, db=CONFIG_DB)
+        cur = cnx.cursor()
+    except Exception as e:
+        logger.error("<<<[connection error V3 in get RULE]:%s" % str(e))
+        return False,None
+
+    sql_string = r"UPDATE " + SPIDER_ITEM_TABLE + " SET LastCrawlDate=%(crawldate)s WHERE name=%(name)s"
+    item = {
+        "crawldate":datetime.datetime.now(),
+        "name":name
+    }
+
+    try:
+        cur.execute(sql_string,item)
+        cnx.commit()
+    except Exception as e:
+        logger.error("<<<[update error V3 in set crawl date]:%s" % str(e))
+        cnx.close()
+        return False, None
+    else:
+        logger.info("<<<[update success V3 in set crawl date]")
+        cnx.close()
+        return True, item["crawldate"]
+
+#action
+def set_action_details(name,logger=default_logger,**kwargs):
+    '''update action details in sql server table
+    
+    '''
+    #pymssql
+    try:
+        cnx = pymssql.connect(host=CONFIG_HOST,user=CONFIG_USER,
+            password=CONFIG_PSWD, db=CONFIG_DB)
+        cur = cnx.cursor()
+    except Exception as e:
+        logger.error("<<<[connection error V3 in set action details]:%s" % str(e))
+        return False
+
+    #default
+    item = {
+        "name":name,
+        "result":"",
+        "user":"AUTO",
+        "action":"AUTO_RUN",
+        "actionTime":datetime.datetime.now(),
+        "status":3
+    }
+    item.update(kwargs)
+
+    sql_string = "UPDATE " + SPIDER_ITEM_TABLE + \
+        "SET LastActionTime=%(actionTime)s,"+ \
+        "LastResult=%(result)s, LastActionUser=%(user)s, " +\
+        "LastAction=%(action)s, Status=%(status)d" +\
+        "WHERE Name=%(name)s"
+    
+    try:
+        cur.execute(sql_string,item)
+        cnx.commit()
+    except Exception as e:
+        logger.info("<<<[update error V3 in set action details]:" + str(e))
+    else:
+        logger.info("<<<[update success V3 in set action details]")
+    finally:
+        cnx.close()
+
+#spider_log
+def set_spider_logger(name,logger=default_logger,**kwargs):
+    '''insert spider logger
+
+    '''
+    #pymssql
+    try:
+        cnx = pymssql.connect(host=CONFIG_HOST,user=CONFIG_USER,
+            password=CONFIG_PSWD, db=CONFIG_DB)
+        cur = cnx.cursor()
+    except Exception as e:
+        logger.error("<<<[connection error V3 in set action details]:%s" % str(e))
+        return False
+    
+    item = {
+        "name" : name,
+        "user" : "AUTO",
+        "IP"   : "127.0.0.1",
+        "action": "AUTO_RUN",
+        "result": "",
+        "create": datetime.datetime.now() 
+    }
+    item.update(kwargs)
+
+    sql_string = "INSERT INTO " + SPIDER_LOG_TABLE + \
+        " (Name, ActionUser, IP, Action, Result,CreateTime,ModifyTime) " +\
+        "VALUES (%(name)s,%(user)s,%(IP)s,%(action)s,%(result)s,%(create)s,%(create)s)"
+
+    try:
+        cur.execute(sql_string,item)
+        cnx.commit()
+    except Exception as e:
+        logger.info("<<<[insert error V3 in insert spider log]:" + str(e))
+    else:
+        logger.info("<<<[insert success V3 in insert spider log]")
+    finally:
+        cnx.close()
+    
+
+
+def set_start_action(name,logger=default_logger,user="AUTO",ip="127.0.0.1",action="AUTO_RUN",result=""):
+    '''update action & insert spider log
+
+    '''
+
+    item = {
+        "user":user,
+        "status":3,
+        "IP"   :ip,
+        "action": action,
+        "result": "{'success':1}" if result else result
+    }
+
+    set_action_details(name,logger,**item)
+    set_spider_logger(name,logger,**item)
+
+def set_stop_action(name,logger=default_logger,user="AUTO",ip="127.0.0.1",action="CRAWL_OVER",result=""):
+    '''update action & insert spider log
+    '''
+
+    item = {
+        "user":user,
+        "status":0,
+        "IP"   :ip,
+        "action": action,
+        "result": "{'success':1}" if result else result
+    }
+
+    set_action_details(name,logger,**item)
+    set_spider_logger(name,logger,**item)
+
+def set_error_action(name,logger=default_logger,user="AUTO",ip="127.0.0.1",action="ERROR",result=""):
+    '''
+    '''
+    item = {
+        "user":user,
+        "status":5,
+        "IP"   :ip,
+        "action": action,
+        "result": "{'success':1}" if result else result
+    }
+
+    set_action_details(name,logger,**item)
+    set_spider_logger(name,logger,**item)
+
+#xml
+
+#re filter
+def isContain(text="",filters=[]):
+    if text and filters:
+        for pa in filters:
+            if re.search(pa,text,re.IGNORECASE):
+                return True
+
+    return False
+
+#is German 
+def isGerman(text,language):
+    keywords = {
+        "CHINESE":["中德","德国","德方"],
+        "GERMAN" :[r"\bGerman\b",r"\bGermany\b"]
+    }
+    return isContain(text,keywords.get(language,[]))
+
+#date
+def get_now_date(input_datestr="",formatter="%Y-%m-%d %H:%M:%S.%f"):
+    '''get datetime.datetime from str or now_date
+    '''
+    if input_datestr:
+        return datetime.datetime.strptime(input_datestr,formatter)
+    else:
+        return datetime.datetime.now()
+
+#xml
+def dict_XML(data_dict,*args,**kwargs):
+    '''dict to xml
+    params:
+        data_dict: input dict
+        field_name : custom or ''
+        multi_split : custom or '' 
+    '''
+
+    field_name = kwargs.get("field_name" , "")
+    multi_split = kwargs.get("multi_split" , "")
+
+    xml_result = '<doc>'
+
+    for k,v in data_dict.items():
+        if field_name:
+            if isinstance(v,list):
+                if multi_split:
+                    xml_result += "<"+ field_name +" name='" + k + "'>" + \
+                    multi_split.join(v) + "</"+ field_name +">"
+                else:
+                    for value in v:
+                        xml_result += "<"+ field_name +" name='" + k + "'>" + \
+                        value + "</"+ field_name +">" 
+            else:
+                xml_result += "<"+ field_name +" name='" + k + "'>" +\
+                v + "</"+ field_name +">"
+
+        else:
+            if isinstance(v,list):
+                if multi_split:
+                    xml_result += "<"+ k +">" + v + "</" + \
+                    multi_split.join(k) + ">"
+                else:
+                    for value in v:
+                        xml_result += "<"+ k +">" + v + "</" + \
+                        value + ">"
+            else:
+                xml_result += "<"+ k +">" + v + "</" + \
+                v + ">"
+
+    xml_result += "</doc>"
+    return xml_result
+
+
+def xml_DICT(data_xml,*args,**kwargs):
+    pass
+#-------------------------end-----------------

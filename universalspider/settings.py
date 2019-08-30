@@ -64,9 +64,9 @@ ROBOTSTXT_OBEY = False
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-ITEM_PIPELINES = {
-   'universalspider.pipelines.NewsSpiderPipeline': 300,
-}
+# ITEM_PIPELINES = {
+#    'universalspider.pipelines.NewsStandFilterPipeline': 300,
+# }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
@@ -91,3 +91,9 @@ ITEM_PIPELINES = {
 
 #BloomFilter Filepath
 BLOOM_PATH = "F:/BloomTest"
+
+#log test
+import datetime
+today = datetime.datetime.now()
+log_file_path = today.strftime('/log/scrapy_%Y_%m_%d.log')
+LOG_FILE = log_file_path
