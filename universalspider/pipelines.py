@@ -453,7 +453,7 @@ from .utils import set_stop_action
 
 class NewsMetaPipeline(object):
 
-    def process_item(self,item):
+    def process_item(self,item,spider):
         '''process item with different validation & prepare item & log details 
         validation as follows:
         1.filter is necessary
@@ -479,9 +479,12 @@ class NewsMetaPipeline(object):
         tag = isContain(text,self.filter)
         #validation 2
         news_date, tag_date = judge_date(dateissued,self.news_date_formatter,self.last_date, self.timezone)
-
+        self.logger.debug("tag<<<<<<<<"+str(tag))
+        self.logger.debug("datetag<<<<<<<<<"+str(tag_date))
 
         if tag and (tag_date or not self.need_filter_date):
+        
+            self.logger.debug("进来过一次")
             sql_string = "INSERT INTO " + self.table + \
                 " (ChannelId,CategoryId,MetadataValue,IsGermany,Sort,Click,Status,IsSolr,CreateTime,ModifyTime) "+\
                 " VALUES "+\
@@ -490,7 +493,7 @@ class NewsMetaPipeline(object):
             metavalue ={
                 "dc.title":title,
                 "dc.date.issued":news_date.strftime("%Y-%m-%d"),
-                "dc.subject":description,
+                "dc.subject":subject,
                 "dc.description":description,
                 "dc.source":source,
                 "dc.author":author,
@@ -511,7 +514,7 @@ class NewsMetaPipeline(object):
                 self.cnx.commit()
                 self.related_count +=1
             except Exception as e:
-                print(e)
+                self.logger.warn("insert one item error,reason:"+str(e))
 
         if not self.last_time:
             self.last_time = time.time()

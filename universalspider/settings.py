@@ -58,9 +58,10 @@ ROBOTSTXT_OBEY = False
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
-#EXTENSIONS = {
+EXTENSIONS = {
 #    'scrapy.extensions.telnet.TelnetConsole': None,
-#}
+    'scrapy.extensions.closespider.CloseSpider':300
+}
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
@@ -95,5 +96,9 @@ BLOOM_PATH = "F:/BloomTest"
 #log test
 import datetime
 today = datetime.datetime.now()
-log_file_path = today.strftime('/log/scrapy_%Y_%m_%d.log')
+log_file_path = today.strftime('log/scrapy_%Y_%m_%d_%H_%M_%S.log')
 LOG_FILE = log_file_path
+
+LOG_LEVEL="DEBUG"
+
+CLOSESPIDER_ITEMCOUNT=10

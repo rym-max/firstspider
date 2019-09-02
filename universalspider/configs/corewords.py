@@ -11,7 +11,7 @@
 
 # here put the import lib
 corewords = {
-    'CHINESE' : ("中德","德国"),
+    'CHINESE' : (),#("中德","德国"),
 
     'ENGLISH' : ("China", "CHINA","German-Chinese", "GERMAN-CHINESE",
         "Chinese-German","CHINESE-GERMAN", "Sino-German",

@@ -42,7 +42,7 @@ DATA_DB		="Vip_Tongji"
 DATA_HOST	="localhost"
 DATA_PORT	=1433
 DATA_TABLE  ="ERMS_All"
-DATA_PSWD	="gespdier"
+DATA_PSWD	="gespider"
 DATA_USER	="spider_account"
 
 

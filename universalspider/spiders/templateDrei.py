@@ -32,9 +32,9 @@ from ..urls import get_start_urls
 from ..errors import PathNotFoundException
 
 import os
-
 import json
 
+from ..filters.bloomfilter import Bloomfilter
 
 class TemplatedreiSpider(CrawlSpider):
 
@@ -73,22 +73,25 @@ class TemplatedreiSpider(CrawlSpider):
 
         #params 2/interact 1
         project_spider_config = get_spider_config(self.name,self.logger)
+        self.logger.debug("<<<spider config origin:\r\n"+str(project_spider_config))
         try:
             custom_config = json.loads(kwargs.get("CUSTOM_CONFIG","{}"))
-            self.logger.warn("CUSTOM_CONIG string type wrong, please check if json!")
         except:
+            self.logger.warn("CUSTOM_CONIG string type wrong, please check if json!")
             custom_config ={}
-        self._config = project_spider_config.update(custom_config)
-
+        self._config = project_spider_config
+        project_spider_config.update(custom_config)
+        self.logger.debug("<<<spider config with custom:\r\n"+str(self._config))
         #params 3
         project_settings = get_project_settings().copy()
         try:
             custom_settings = json.loads(kwargs.get("CUSTOM_SETTINGS","{}"))
-            self.logger.warn("CUSTOM_SETTINGS string type wrong, please check if json!")
         except:
+            self.logger.warn("CUSTOM_SETTINGS string type wrong, please check if json!")
             custom_settings ={}
-        settings = project_settings.update(custom_settings)
-
+        settings = project_settings
+        project_settings.update(custom_settings)
+        self.logger.debug("<<<spider config:\r\n"+str(settings))
         #params 4/interact 3
         success, self.last_crawl_date = get_last_crawl_date(self._name,self.logger)
         self.logger.info("LAST_CRAWL_DATE: %s" % self.last_crawl_date)
@@ -99,9 +102,11 @@ class TemplatedreiSpider(CrawlSpider):
             self.bloom_path = settings.get("BLOOM_PATH",
                 self._config.get("BLOOM_PATH",None))
             self.website = self._config.get("WEBSITE",self.name)
-            self.bloomfiter, self.bloomname = get_bloom(self.bloom_path,
+            self.bloomfilter, self.bloomname = get_bloom(self.bloom_path,\
                 self.website,self.last_crawl_date,self.logger)
-            self.logger.info("BLOOM INIT Success ,Name:",str(self.bloomname))
+            self.logger.debug("Bloom Type:"+str(self.bloomfilter)+"----------"+str(self.bloomname))
+            self.logger.debug("BLOOM TYPE: "+str(isinstance(self.bloomfilter, Bloomfilter)))
+            self.logger.info("BLOOM INIT Success ,Name:"+str(self.bloomname))
         else:    
             self.logger.info("NOT USE BLOOM !")
 
@@ -156,15 +161,15 @@ class TemplatedreiSpider(CrawlSpider):
 
         # for _compile_rules
         super(TemplatedreiSpider, self).__init__(*args,**kwargs)
-        self.logger.info("Spider Init Success,[Spide Name]:",self.name,"[Spider Item]:",self._name)
+        self.logger.info("Spider Init Success, [Spide Name]:"+self.name+" [Spider Item]:"+self._name)
 
     def closed(self,reason):
     
         set_bloom(self.bloomfilter,self.bloom_path+'/'+self.name,self.bloomname,self.logger)
         #stop action in pipeline
     
-        self.logger.info("Spider closed.[Spider Name]:",self.name,
-            "[Spider Item]:",self._name,"[reason]:",str(reason))
+        self.logger.info("Spider closed. [Spider Name]:"+self.name+
+            " [Spider Item]:"+self._name+" [reason]:"+str(reason))
     
     def parse_start_url(self,response):
         '''process start_urls

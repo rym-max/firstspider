@@ -236,9 +236,12 @@ def judge_date(news_date,news_date_formatter=["%Y-%m-%d %H:%M:%S"],last_date=Non
             break
     if dd:
         if dd > last_date - datetime.timedelta(0,3600*(8-timezone)):
+            default_logger.info("<<<date true："+str(dd))
             return dd,True
         else:
+            default_logger.info("<<<date false："+str(dd))
             return dd,False
+    
     logger.warn("<<<<[warn]:error in date decode %s" % str(news_date))
     return None,False
 
@@ -377,13 +380,14 @@ def get_bloom(prepath,spider_name,last_date,logger,*args,**kwargs):
         if latest_Date and datetime.datetime.now()-latest_Date < days_delta:
             #读取pickle，并设置logger
             #read_sbf=Bloomfilter()
-            f = open(spider_path+'/'+target_file,'rb')
-            read_sbf = pickle.load(f)
-            read_sbf.setlogger(logger)
+            if os.path.getsize(spider_path+'/'+target_file)>0:#文件不能为空
+                f = open(spider_path+'/'+target_file,'rb')
+                read_sbf = pickle.load(f)
+                read_sbf.setlogger(spider_name)
 
-            sbf_filename = target_file
-            f.close()
-            return read_sbf, sbf_filename
+                sbf_filename = target_file
+                f.close()
+                return read_sbf, sbf_filename
         
     #是否需要删除
     if target_file:
@@ -396,7 +400,8 @@ def get_bloom(prepath,spider_name,last_date,logger,*args,**kwargs):
     #else:
         #文件夹下为空，直接创建一个新的bloomfilter
     #超过特定时间长度，决定重新创建
-    new_sbf = Bloomfilter(logger)
+    new_sbf = Bloomfilter(spider_name)
+    logger.debug("create one bloom："+str(new_sbf))
     return new_sbf, None
 
 def set_bloom(bloomF,bloompath=None,bloomname=None,logger=default_logger,create_Date=False,*args,**kwargs):
@@ -405,6 +410,7 @@ def set_bloom(bloomF,bloompath=None,bloomname=None,logger=default_logger,create_
     desc:pickle文件日期格式
     spidername_YYYY-mm-dd HH:MM:SS.pickle
     """
+    logger.info(bloomF)
     if not isinstance(bloomF, Bloomfilter):
         logger.error("<<<<<<<<<<<<<<<[error]:传入了错误格式的bloomfilter")
         raise ValueError
@@ -418,9 +424,10 @@ def set_bloom(bloomF,bloompath=None,bloomname=None,logger=default_logger,create_
     if bloomname==None:
         create_Date = True
 
+    spider_name = kwargs.get("spidername","TEMPORARY")
     if not create_Date:
         if bloomname != None:
-            re_pattern  = r"_\d+-\d+-\d+ \d+:\d+:\d+\.pkl"
+            re_pattern  = r"_\d+-\d+-\d+ \d+-\d+-\d+\.pkl"
             if re.search(re_pattern, bloompath):
                 filename = bloomname
             else:
@@ -428,10 +435,10 @@ def set_bloom(bloomF,bloompath=None,bloomname=None,logger=default_logger,create_
     
     if filename == None:
         now_time = datetime.datetime.now()
-        filename = now_time.strftime("TEMPORY_%Y-%m-%d %H-%M-%S.pkl")
+        filename = now_time.strftime(spider_name+"_%Y-%m-%d %H-%M-%S.pkl")
     try:
         f = open(bloompath +'/'+ filename,'wb')
-        bloomF.setlogger(None)
+        bloomF.clearlogger()
         pickle.dump(bloomF,f)
         f.close()
     except Exception as e:
@@ -455,13 +462,13 @@ def get_spider_config(name,logger=default_logger):
     #pymssql
     try:
         cnx = pymssql.connect(host=CONFIG_HOST,user=CONFIG_USER,
-            password=CONFIG_PSWD, db=CONFIG_DB)
+            password=CONFIG_PSWD, database=CONFIG_DB)
         cur = cnx.cursor()
     except Exception as e:
         logger.error("<<<[connection error V3 in get config]:%s"%str(e))
         return {}
 
-    sql_string = r"SELECT Configs FROM " + SPIDER_CONFIG_TABLE +" WHERE name=%(name)"
+    sql_string = r"SELECT Configs FROM " + SPIDER_CONFIG_TABLE +" WHERE name=%(name)s"
     item = {
         "name":name
     }
@@ -476,6 +483,7 @@ def get_spider_config(name,logger=default_logger):
         if result:
             config = json.loads(result)
             cnx.close()
+            logger.debug("<<<[success in get config V3] \r\n"+str(config))
             return config
         else:
             cnx.close()
@@ -502,7 +510,7 @@ def get_spider_rule(name,logger=default_logger):
     #pymssql
     try:
         cnx = pymssql.connect(host=CONFIG_HOST,user=CONFIG_USER,
-            password=CONFIG_PSWD, db=CONFIG_DB)
+            password=CONFIG_PSWD, database=CONFIG_DB)
         cur = cnx.cursor()
     except Exception as e:
         logger.error("<<<[connection error V3 in get RULE]:%s"%str(e))
@@ -515,7 +523,7 @@ def get_spider_rule(name,logger=default_logger):
 
     try:
         cur.execute(sql_string,item)
-        result = cur.fetchone[0]
+        result = cur.fetchone()[0]
     except Exception as e:
         logger.warn("<<<<[query error V3 in get RULE]:%s" % str(e))
         return ()
@@ -554,7 +562,7 @@ def get_last_crawl_date(name,logger=default_logger):
     #pymssql
     try:
         cnx = pymssql.connect(host=CONFIG_HOST,user=CONFIG_USER,
-            password=CONFIG_PSWD, db=CONFIG_DB)
+            password=CONFIG_PSWD, database=CONFIG_DB)
         cur = cnx.cursor()
     except Exception as e:
         logger.error("<<<[connection error V3 in get RULE]:%s" % str(e))
@@ -582,10 +590,10 @@ def get_last_crawl_date(name,logger=default_logger):
     else:
         cnx.close()
         if result[0]:
-            logger.info("<<<[query success V3 in get crawl date]:last one")
+            logger.info("<<<[query success V3 in get crawl date]:last one,"+str(result[0]))
             return True, result[0]
         else:
-            logger.info("<<<[query success V3 in get crawl date]:new one")
+            logger.info("<<<[query success V3 in get crawl date]:new one,")
             return True, datetime.datetime.now()
     
 
@@ -598,7 +606,7 @@ def set_last_crawl_date(name,logger=default_logger):
     #pymssql
     try:
         cnx = pymssql.connect(host=CONFIG_HOST,user=CONFIG_USER,
-            password=CONFIG_PSWD, db=CONFIG_DB)
+            password=CONFIG_PSWD, database=CONFIG_DB)
         cur = cnx.cursor()
     except Exception as e:
         logger.error("<<<[connection error V3 in get RULE]:%s" % str(e))
@@ -630,7 +638,7 @@ def set_action_details(name,logger=default_logger,**kwargs):
     #pymssql
     try:
         cnx = pymssql.connect(host=CONFIG_HOST,user=CONFIG_USER,
-            password=CONFIG_PSWD, db=CONFIG_DB)
+            password=CONFIG_PSWD, database=CONFIG_DB)
         cur = cnx.cursor()
     except Exception as e:
         logger.error("<<<[connection error V3 in set action details]:%s" % str(e))
@@ -648,9 +656,9 @@ def set_action_details(name,logger=default_logger,**kwargs):
     item.update(kwargs)
 
     sql_string = "UPDATE " + SPIDER_ITEM_TABLE + \
-        "SET LastActionTime=%(actionTime)s,"+ \
-        "LastResult=%(result)s, LastActionUser=%(user)s, " +\
-        "LastAction=%(action)s, Status=%(status)d" +\
+        " SET LastActionTime=%(actionTime)s,"+ \
+        " LastResult=%(result)s, LastActionUser=%(user)s, " +\
+        " LastAction=%(action)s, Status=%(status)d" +\
         "WHERE Name=%(name)s"
     
     try:
@@ -671,7 +679,7 @@ def set_spider_logger(name,logger=default_logger,**kwargs):
     #pymssql
     try:
         cnx = pymssql.connect(host=CONFIG_HOST,user=CONFIG_USER,
-            password=CONFIG_PSWD, db=CONFIG_DB)
+            password=CONFIG_PSWD, database=CONFIG_DB)
         cur = cnx.cursor()
     except Exception as e:
         logger.error("<<<[connection error V3 in set action details]:%s" % str(e))
@@ -757,7 +765,7 @@ def isContain(text="",filters=[]):
             if re.search(pa,text,re.IGNORECASE):
                 return True
 
-    return False
+    return True
 
 #is German 
 def isGerman(text,language):
@@ -777,6 +785,8 @@ def get_now_date(input_datestr="",formatter="%Y-%m-%d %H:%M:%S.%f"):
         return datetime.datetime.now()
 
 #xml
+import xml.dom.minidom as minidom
+
 def dict_XML(data_dict,*args,**kwargs):
     '''dict to xml
     params:
@@ -784,41 +794,30 @@ def dict_XML(data_dict,*args,**kwargs):
         field_name : custom or ''
         multi_split : custom or '' 
     '''
+    
+    # field_name = kwargs.get("field_name" , "")
+    # multi_split = kwargs.get("multi_split" , "")
 
-    field_name = kwargs.get("field_name" , "")
-    multi_split = kwargs.get("multi_split" , "")
-
-    xml_result = '<doc>'
+    doc = minidom.Document()
+    rootDoc = doc.createElement("doc")
+    doc.appendChild(rootDoc)
 
     for k,v in data_dict.items():
-        if field_name:
-            if isinstance(v,list):
-                if multi_split:
-                    xml_result += "<"+ field_name +" name='" + k + "'>" + \
-                    multi_split.join(v) + "</"+ field_name +">"
-                else:
-                    for value in v:
-                        xml_result += "<"+ field_name +" name='" + k + "'>" + \
-                        value + "</"+ field_name +">" 
-            else:
-                xml_result += "<"+ field_name +" name='" + k + "'>" +\
-                v + "</"+ field_name +">"
-
+        if isinstance(v,list):
+            for vv in v:
+                oneNode = doc.createElement("field")
+                oneNode.setAttribute("name",k)
+                oneNodeText = doc.createTextNode(vv)
+                oneNode.appendChild(oneNodeText)
+                rootDoc.appendChild(oneNode)
         else:
-            if isinstance(v,list):
-                if multi_split:
-                    xml_result += "<"+ k +">" + v + "</" + \
-                    multi_split.join(k) + ">"
-                else:
-                    for value in v:
-                        xml_result += "<"+ k +">" + v + "</" + \
-                        value + ">"
-            else:
-                xml_result += "<"+ k +">" + v + "</" + \
-                v + ">"
+            oneNode = doc.createElement("field")
+            oneNode.setAttribute("name",k)
+            oneNodeText = doc.createTextNode(v)
+            oneNode.appendChild(oneNodeText)
+            rootDoc.appendChild(oneNode)
 
-    xml_result += "</doc>"
-    return xml_result
+    return doc.toprettyxml()
 
 
 def xml_DICT(data_xml,*args,**kwargs):

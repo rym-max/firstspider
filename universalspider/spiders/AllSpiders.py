@@ -14,6 +14,7 @@ from scrapy.http import Request
 from scrapy.utils.deprecate import method_is_overridden
 
 from .templateZwei import TemplatezweiSpider
+from .templateDrei import TemplatedreiSpider
 
 class RmrbSpider(TemplatezweiSpider):
     '''production scene need exclusive class now
@@ -45,7 +46,7 @@ class GmrbSpider(TemplatezweiSpider):
         "DOWNLOAD_DELAY": 1
     }
 
-class GmwSpider(TemplatezweiSpider):
+class GmwSpider(TemplatedreiSpider):
     '''production scene need exclusive class now
 
     due to main problem above, should customize custom_settings as attributes and declare its own name
@@ -55,7 +56,10 @@ class GmwSpider(TemplatezweiSpider):
     custom_settings = {
         "USER_AGENT": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36",
         "ITEM_PIPELINES":{
-            "universalspider.pipelines.NewsStandFilterPipeline": 300
+            "universalspider.pipelines.NewsMetaPipeline": 300
+        },
+        "DOWNLOADER_MIDDLEWARES":{
+            "universalspider.middlewares.BloomFilterMiddlewares": 300
         },
         "DOWNLOAD_DELAY": 1
     }
@@ -498,7 +502,7 @@ class GigaSpider(TemplatezweiSpider):
 '''
 #api接口类需要对start_urls 去重
 #改写start_request方法，dont_filter=False
-class PeopleSpider(TemplatezweiSpider):
+class PeopleSpider(TemplatedreiSpider):
     '''production scene need exclusive class now
 
     due to main problem above, should customize custom_settings as attributes and declare its own name
@@ -508,7 +512,10 @@ class PeopleSpider(TemplatezweiSpider):
     custom_settings = {
         "USER_AGENT": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36",
         "ITEM_PIPELINES":{
-            "universalspider.pipelines.NewsStandFilterPipeline": 300
+            "universalspider.pipelines.NewsMetaPipeline": 300
+        },
+        "DOWNLOADER_MIDDLEWARES":{
+            "universalspider.middlewares.BloomFilterMiddlewares": 300
         },
         "DOWNLOAD_DELAY": 1
     }

@@ -19,9 +19,9 @@ class Bloomfilter(object):
 
     logger = None
 
-    def __init__(self,logger=logger,*args,**kwargs):
-        self.logger = logger
+    def __init__(self,spidername="",*args,**kwargs):
         self.sbf = ScalableBloomFilter(mode=ScalableBloomFilter.SMALL_SET_GROWTH, error_rate=1e-6)
+        self.setlogger(spidername)
     
     def setlogger(self,spidername=""):
         #防止读取时logger指向原logger而不存在
@@ -47,3 +47,8 @@ class Bloomfilter(object):
             self.sbf.add(self.md5(url))
         except Exception as e:
             self.logger("[%s] bloomfilter exception<<<<<<<<< [%s]" % (url, str(e)))
+
+
+if __name__ == "__main__":
+    new_sbf = Bloomfilter(logging.getLogger("123"))
+    print(isinstance(new_sbf,Bloomfilter))
